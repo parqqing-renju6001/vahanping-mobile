@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "713317464624",
+    "project_id": "vahanping",
+    "storage_bucket": "vahanping.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:713317464624:android:8e50cb7ab0904e02444bf5",
+        "android_client_info": {
+          "package_name": "com.vahanping.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDHW-LNtSxFCEDhLC7J01_ZRBpMxaQ7Bq8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
