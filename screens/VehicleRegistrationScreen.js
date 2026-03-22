@@ -20,11 +20,14 @@ export default function VehicleRegistrationScreen({ navigation }) {
 
   const handleRegister = async () => {
     if (!plate.trim()) return Alert.alert('Required', 'Please enter your license plate number.');
+    if (!phone.trim()) return Alert.alert('Required', 'Please enter your phone number for alerts.');
+    if (phone.length !== 10) return Alert.alert('Invalid', 'Please enter a valid 10 digit phone number.');
     if (!color) return Alert.alert('Required', 'Please select your vehicle color.');
 
     setLoading(true);
     try {
-      // Register vehicle on backend
+      const fullPhone = '+91' + phone.trim();
+
       const response = await fetch(`${BACKEND}/api/v1/vehicles`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -32,7 +35,7 @@ export default function VehicleRegistrationScreen({ navigation }) {
           plate: plate.trim().toUpperCase(),
           model: model.trim(),
           color,
-          phone: phone.trim(),
+          phone: fullPhone,
         }),
       });
 
@@ -41,7 +44,6 @@ export default function VehicleRegistrationScreen({ navigation }) {
         backendData = await response.json();
       }
 
-      // Save locally with a token (use backend token or generate one)
       const vehicleId = backendData?.id || backendData?.token || generateId();
       const newVehicle = {
         id: vehicleId,
@@ -49,7 +51,7 @@ export default function VehicleRegistrationScreen({ navigation }) {
         nickname: nickname.trim() || plate.trim().toUpperCase(),
         model: model.trim() || 'Vehicle',
         color,
-        phone: phone.trim(),
+        phone: fullPhone,
         token: backendData?.token || vehicleId,
         registeredAt: new Date().toISOString(),
       };
@@ -66,11 +68,9 @@ export default function VehicleRegistrationScreen({ navigation }) {
          { text: 'Go Home', onPress: () => navigation.navigate('Home') }]
       );
 
-      // Reset form
       setPlate(''); setNickname(''); setModel(''); setColor(''); setPhone('');
 
     } catch (e) {
-      // Save locally even if backend fails
       const vehicleId = generateId();
       const newVehicle = {
         id: vehicleId,
@@ -78,7 +78,7 @@ export default function VehicleRegistrationScreen({ navigation }) {
         nickname: nickname.trim() || plate.trim().toUpperCase(),
         model: model.trim() || 'Vehicle',
         color,
-        phone: phone.trim(),
+        phone: '+91' + phone.trim(),
         token: vehicleId,
         registeredAt: new Date().toISOString(),
       };
@@ -125,12 +125,15 @@ export default function VehicleRegistrationScreen({ navigation }) {
               <Text style={styles.label}>License Plate *</Text>
               <TextInput
                 style={[styles.input, styles.plateInput]}
-                placeholder="KL 01 AB 1234"
+                placeholder="KL01AB1234"
                 placeholderTextColor="#444"
                 value={plate}
-                onChangeText={t => setPlate(t.toUpperCase())}
+                onChangeText={t => {
+                  const cleaned = t.replace(/[^A-Z0-9]/g, '');
+                  if (cleaned.length <= 10) setPlate(cleaned);
+                }}
                 autoCapitalize="characters"
-                maxLength={12}
+                maxLength={10}
               />
             </View>
 
@@ -174,16 +177,25 @@ export default function VehicleRegistrationScreen({ navigation }) {
             </View>
 
             <View style={styles.field}>
-              <Text style={styles.label}>Phone Number (optional)</Text>
+              <Text style={styles.label}>Phone Number *</Text>
               <Text style={styles.labelHint}>Used for urgent alerts only — never shown publicly</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="+91 98765 43210"
-                placeholderTextColor="#444"
-                value={phone}
-                onChangeText={setPhone}
-                keyboardType="phone-pad"
-              />
+              <View style={styles.phoneRow}>
+                <View style={styles.phonePrefix}>
+                  <Text style={styles.phonePrefixText}>+91</Text>
+                </View>
+                <TextInput
+                  style={[styles.input, styles.phoneInput]}
+                  placeholder="98765 43210"
+                  placeholderTextColor="#444"
+                  value={phone}
+                  onChangeText={text => {
+                    const cleaned = text.replace(/[^0-9]/g, '');
+                    if (cleaned.length <= 10) setPhone(cleaned);
+                  }}
+                  keyboardType="phone-pad"
+                  maxLength={10}
+                />
+              </View>
             </View>
           </View>
 
@@ -216,7 +228,7 @@ function generateId() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#0F0F0F' },
-  scroll: { padding: 20 },
+  scroll: { padding: 20, paddingBottom: 90 },
   header: {
     marginBottom: 20,
     paddingTop: 10,
@@ -284,6 +296,27 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     color: '#FF6B00',
   },
+  phoneRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  phonePrefix: {
+    backgroundColor: '#1A1A1A',
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
+  },
+  phonePrefixText: {
+    color: '#FF6B00',
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  phoneInput: {
+    flex: 1,
+  },
   colorGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -325,3 +358,4 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
 });
+
