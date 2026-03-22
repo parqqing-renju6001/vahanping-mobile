@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity,
   StyleSheet, SafeAreaView, RefreshControl, Alert
@@ -11,6 +11,13 @@ const BACKEND = 'https://parkping-wwur.onrender.com';
 export default function HomeScreen({ navigation }) {
   const [vehicles, setVehicles] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [pushToken, setPushToken] = useState('');
+
+  useEffect(() => {
+    AsyncStorage.getItem('expo_push_token').then(t => {
+      if (t) setPushToken(t);
+    });
+  }, []);
 
   const loadVehicles = async () => {
     try {
@@ -86,6 +93,9 @@ export default function HomeScreen({ navigation }) {
         <View>
           <Text style={styles.headerTitle}>🅿️ VahanPing</Text>
           <Text style={styles.headerSub}>Your registered vehicles</Text>
+          <Text style={{color: pushToken ? '#4CAF50' : '#FF3B30', fontSize: 10, marginTop: 2}}>
+            {pushToken ? '🟢 Push notifications ON' : '🔴 Push notifications OFF'}
+          </Text>
         </View>
         <View style={styles.countBadge}>
           <Text style={styles.countText}>{vehicles.length}</Text>
@@ -172,6 +182,7 @@ const styles = StyleSheet.create({
   list: {
     padding: 16,
     gap: 12,
+    paddingBottom: 90,
   },
   card: {
     backgroundColor: '#1A1A1A',
@@ -263,6 +274,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 40,
+    paddingBottom: 90,
   },
   emptyIcon: {
     fontSize: 72,
@@ -308,3 +320,4 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
 });
+
