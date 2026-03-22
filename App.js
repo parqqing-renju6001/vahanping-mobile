@@ -6,6 +6,7 @@ import { Text, Platform } from 'react-native';
 import { useEffect, useRef } from 'react';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import HomeScreen from './screens/HomeScreen';
 import VehicleRegistrationScreen from './screens/VehicleRegistrationScreen';
@@ -110,8 +111,23 @@ export default function App() {
   const responseListener = useRef();
 
   useEffect(() => {
-    registerForPushNotificationsAsync().then(token => {
-      if (token) console.log('Push token:', token);
+    registerForPushNotificationsAsync().then(async token => {
+      if (token) {
+        console.log('Push token:', token);
+        try {
+          const stored = await AsyncStorage.getItem('vehicles');
+          const vehicles = stored ? JSON.parse(stored) : [];
+          for (const vehicle of vehicles) {
+            await fetch('https://parkping-wwur.onrender.com/api/v1/push-token', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ qr_token: vehicle.token, push_token: token })
+            });
+          }
+        } catch (e) {
+          console.log('Push token save error:', e);
+        }
+      }
     });
 
     notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
