@@ -63,10 +63,14 @@ export default function PaymentScreen({ navigation }) {
       );
 
     } catch (error) {
-      if (error.code !== 2) { // 2 = user cancelled
-        Alert.alert('Payment Failed', error.description || 'Something went wrong');
-      }
-    } finally {
+  if (error.code !== 2) {
+    // code 2 = user cancelled, don't show error
+    if (error.reason !== 'payment_error') {
+      Alert.alert('Payment Failed', 'Something went wrong. Please try again.');
+    }
+  }
+}
+    finally {
       setLoading(false);
     }
   };
