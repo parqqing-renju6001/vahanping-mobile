@@ -90,15 +90,23 @@ export default function HomeScreen({ navigation }) {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>🅿️ VahanPing</Text>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.headerTitle}>VahanPing</Text>
           <Text style={styles.headerSub}>Your registered vehicles</Text>
           <Text style={{color: pushToken ? '#4CAF50' : '#FF3B30', fontSize: 10, marginTop: 2}}>
             {pushToken ? '🟢 Push notifications ON' : '🔴 Push notifications OFF'}
           </Text>
         </View>
-        <View style={styles.countBadge}>
-          <Text style={styles.countText}>{vehicles.length}</Text>
+        <View style={styles.headerRight}>
+          <TouchableOpacity
+            style={styles.upgradeBtn}
+            onPress={() => navigation.navigate('Payment')}
+          >
+            <Text style={styles.upgradeBtnText}>⚡ Upgrade</Text>
+          </TouchableOpacity>
+          <View style={styles.countBadge}>
+            <Text style={styles.countText}>{vehicles.length}</Text>
+          </View>
         </View>
       </View>
 
@@ -166,16 +174,34 @@ const styles = StyleSheet.create({
     color: '#666',
     marginTop: 2,
   },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  upgradeBtn: {
+    backgroundColor: '#FF6B00',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  upgradeBtnText: {
+    color: '#FFF',
+    fontWeight: '700',
+    fontSize: 13,
+  },
   countBadge: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#FF6B00',
+    backgroundColor: '#1A1A1A',
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
   },
   countText: {
-    color: '#FFF',
+    color: '#FF6B00',
     fontWeight: '800',
     fontSize: 16,
   },
@@ -320,4 +346,3 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
 });
-
