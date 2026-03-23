@@ -16,6 +16,7 @@ export default function VehicleRegistrationScreen({ navigation }) {
   const [model, setModel] = useState('');
   const [color, setColor] = useState('');
   const [phone, setPhone] = useState('');
+  const [callEnabled, setCallEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
@@ -36,6 +37,7 @@ export default function VehicleRegistrationScreen({ navigation }) {
           model: model.trim(),
           color,
           phone: fullPhone,
+          call_enabled: callEnabled,
         }),
       });
 
@@ -52,6 +54,7 @@ export default function VehicleRegistrationScreen({ navigation }) {
         model: model.trim() || 'Vehicle',
         color,
         phone: fullPhone,
+        call_enabled: callEnabled,
         token: backendData?.token || vehicleId,
         registeredAt: new Date().toISOString(),
       };
@@ -68,7 +71,7 @@ export default function VehicleRegistrationScreen({ navigation }) {
          { text: 'Go Home', onPress: () => navigation.navigate('Home') }]
       );
 
-      setPlate(''); setNickname(''); setModel(''); setColor(''); setPhone('');
+      setPlate(''); setNickname(''); setModel(''); setColor(''); setPhone(''); setCallEnabled(false);
 
     } catch (e) {
       const vehicleId = generateId();
@@ -79,6 +82,7 @@ export default function VehicleRegistrationScreen({ navigation }) {
         model: model.trim() || 'Vehicle',
         color,
         phone: '+91' + phone.trim(),
+        call_enabled: callEnabled,
         token: vehicleId,
         registeredAt: new Date().toISOString(),
       };
@@ -197,6 +201,22 @@ export default function VehicleRegistrationScreen({ navigation }) {
                 />
               </View>
             </View>
+
+            {/* Call opt-in toggle */}
+            <View style={styles.field}>
+              <View style={styles.toggleRow}>
+                <View style={styles.toggleInfo}>
+                  <Text style={styles.label}>Enable Anonymous Calls 📞</Text>
+                  <Text style={styles.labelHint}>Allow people to call you anonymously via VahanPing</Text>
+                </View>
+                <TouchableOpacity
+                  style={[styles.toggle, callEnabled && styles.toggleActive]}
+                  onPress={() => setCallEnabled(!callEnabled)}
+                >
+                  <Text style={styles.toggleText}>{callEnabled ? 'ON' : 'OFF'}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
           </View>
 
           {/* Submit */}
@@ -250,10 +270,10 @@ const styles = StyleSheet.create({
     padding: 16,
     marginBottom: 24,
     borderLeftWidth: 3,
-    borderLeftColor: '#FF6B00',
+    borderLeftColor: '#4CAF50',
   },
   infoTitle: {
-    color: '#FF6B00',
+    color: '#4CAF50',
     fontWeight: '700',
     fontSize: 13,
     marginBottom: 8,
@@ -294,7 +314,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 3,
     textAlign: 'center',
-    color: '#FF6B00',
+    color: '#4CAF50',
   },
   phoneRow: {
     flexDirection: 'row',
@@ -310,7 +330,7 @@ const styles = StyleSheet.create({
     borderColor: '#2A2A2A',
   },
   phonePrefixText: {
-    color: '#FF6B00',
+    color: '#4CAF50',
     fontSize: 15,
     fontWeight: '700',
   },
@@ -331,8 +351,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#1A1A1A',
   },
   colorChipActive: {
-    backgroundColor: '#FF6B00',
-    borderColor: '#FF6B00',
+    backgroundColor: '#4CAF50',
+    borderColor: '#4CAF50',
   },
   colorChipText: {
     color: '#888',
@@ -342,8 +362,35 @@ const styles = StyleSheet.create({
   colorChipTextActive: {
     color: '#FFF',
   },
+  toggleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#1A1A1A',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#2A2A2A',
+  },
+  toggleInfo: { flex: 1, marginRight: 16 },
+  toggle: {
+    backgroundColor: '#2A2A2A',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    minWidth: 60,
+    alignItems: 'center',
+  },
+  toggleActive: {
+    backgroundColor: '#4CAF50',
+  },
+  toggleText: {
+    color: '#FFF',
+    fontWeight: '800',
+    fontSize: 13,
+  },
   submitBtn: {
-    backgroundColor: '#FF6B00',
+    backgroundColor: '#4CAF50',
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',
