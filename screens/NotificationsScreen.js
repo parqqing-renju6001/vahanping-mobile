@@ -203,7 +203,7 @@ export default function NotificationsScreen({ navigation }) {
           renderItem={renderItem}
           contentContainerStyle={styles.list}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF6B00" />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7C3AED" />
           }
           ListHeaderComponent={
             unreadCount > 0 ? (
@@ -226,7 +226,7 @@ export default function NotificationsScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F0F' },
+  container: { flex: 1, backgroundColor: '#0A0A0F' },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -267,23 +267,23 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   markAllText: {
-    color: '#FF6B00',
+    color: '#7C3AED',
     fontWeight: '600',
     fontSize: 14,
   },
   card: {
-    backgroundColor: '#1A1A1A',
+    backgroundColor: '#12121A',
     borderRadius: 16,
     padding: 14,
     flexDirection: 'row',
     alignItems: 'flex-start',
     marginBottom: 12,
     borderWidth: 1,
-    borderColor: '#2A2A2A',
+    borderColor: '#22223A',
     position: 'relative',
   },
   cardUnread: {
-    borderColor: '#FF6B0044',
+    borderColor: '#7C3AED44',
     backgroundColor: '#1F1A14',
   },
   iconBubble: {
@@ -325,7 +325,7 @@ const styles = StyleSheet.create({
   },
   platePill: {
     alignSelf: 'flex-start',
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#1A1A26',
     borderRadius: 20,
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#FF6B00',
+    backgroundColor: '#7C3AED',
     position: 'absolute',
     top: 14,
     right: 14,
@@ -365,7 +365,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   registerBtn: {
-    backgroundColor: '#FF6B00',
+    backgroundColor: '#7C3AED',
     paddingHorizontal: 28,
     paddingVertical: 14,
     borderRadius: 14,

@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, SafeAreaView, ScrollView,
-  ActivityIndicator, Alert, KeyboardAvoidingView, Platform
+  ActivityIndicator, KeyboardAvoidingView, Platform
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import CustomModal from './CustomModal';
 
 const BACKEND = 'https://parkping-wwur.onrender.com';
-
 const COLORS = ['White', 'Black', 'Silver', 'Red', 'Blue', 'Grey', 'Green', 'Yellow', 'Orange', 'Other'];
 
 export default function VehicleRegistrationScreen({ navigation }) {
@@ -19,11 +19,19 @@ export default function VehicleRegistrationScreen({ navigation }) {
   const [callEnabled, setCallEnabled] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Custom modal state
+  const [modal, setModal] = useState({ visible: false, icon: '', title: '', message: '', buttons: [] });
+
+  const showModal = (icon, title, message, buttons) => {
+    setModal({ visible: true, icon, title, message, buttons });
+  };
+  const closeModal = () => setModal(m => ({ ...m, visible: false }));
+
   const handleRegister = async () => {
-    if (!plate.trim()) return Alert.alert('Required', 'Please enter your license plate number.');
-    if (!phone.trim()) return Alert.alert('Required', 'Please enter your phone number for alerts.');
-    if (phone.length !== 10) return Alert.alert('Invalid', 'Please enter a valid 10 digit phone number.');
-    if (!color) return Alert.alert('Required', 'Please select your vehicle color.');
+    if (!plate.trim()) return showModal('⚠️', 'Required', 'Please enter your license plate number.', [{ text: 'OK', style: 'primary', onPress: closeModal }]);
+    if (!phone.trim()) return showModal('⚠️', 'Required', 'Please enter your phone number for alerts.', [{ text: 'OK', style: 'primary', onPress: closeModal }]);
+    if (phone.length !== 10) return showModal('⚠️', 'Invalid', 'Please enter a valid 10 digit phone number.', [{ text: 'OK', style: 'primary', onPress: closeModal }]);
+    if (!color) return showModal('⚠️', 'Required', 'Please select your vehicle color.', [{ text: 'OK', style: 'primary', onPress: closeModal }]);
 
     setLoading(true);
     try {
@@ -61,17 +69,14 @@ export default function VehicleRegistrationScreen({ navigation }) {
 
       const stored = await AsyncStorage.getItem('vehicles');
       const existing = stored ? JSON.parse(stored) : [];
-      const updated = [...existing, newVehicle];
-      await AsyncStorage.setItem('vehicles', JSON.stringify(updated));
-
-      Alert.alert(
-        '✅ Vehicle Registered!',
-        `${newVehicle.plate} is now on VahanPing. Show your QR code to get a sticker!`,
-        [{ text: 'View QR Code', onPress: () => navigation.navigate('QRCode', { vehicle: newVehicle }) },
-         { text: 'Go Home', onPress: () => navigation.navigate('Home') }]
-      );
+      await AsyncStorage.setItem('vehicles', JSON.stringify([...existing, newVehicle]));
 
       setPlate(''); setNickname(''); setModel(''); setColor(''); setPhone(''); setCallEnabled(false);
+
+      showModal('🎉', 'Vehicle Registered!', `${newVehicle.plate} is now live on VahanPing. Get your QR sticker!`, [
+        { text: 'View QR Code', style: 'primary', onPress: () => { closeModal(); navigation.navigate('QRCode', { vehicle: newVehicle }); } },
+        { text: 'Go Home', onPress: () => { closeModal(); navigation.navigate('Home'); } },
+      ]);
 
     } catch (e) {
       const vehicleId = generateId();
@@ -91,11 +96,9 @@ export default function VehicleRegistrationScreen({ navigation }) {
       const existing = stored ? JSON.parse(stored) : [];
       await AsyncStorage.setItem('vehicles', JSON.stringify([...existing, newVehicle]));
 
-      Alert.alert(
-        '✅ Saved Locally',
-        `Vehicle saved. It will sync when you're online.`,
-        [{ text: 'View QR Code', onPress: () => navigation.navigate('QRCode', { vehicle: newVehicle }) }]
-      );
+      showModal('✅', 'Saved Locally', `Vehicle saved. It will sync when you're online.`, [
+        { text: 'View QR Code', style: 'primary', onPress: () => { closeModal(); navigation.navigate('QRCode', { vehicle: newVehicle }); } },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -103,16 +106,22 @@ export default function VehicleRegistrationScreen({ navigation }) {
 
   return (
     <SafeAreaView style={styles.container}>
+      <CustomModal
+        visible={modal.visible}
+        icon={modal.icon}
+        title={modal.title}
+        message={modal.message}
+        buttons={modal.buttons}
+        onClose={closeModal}
+      />
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
 
-          {/* Header */}
           <View style={styles.header}>
             <Text style={styles.headerTitle}>Register Vehicle</Text>
             <Text style={styles.headerSub}>Get a QR sticker for your car window</Text>
           </View>
 
-          {/* How it works */}
           <View style={styles.infoBox}>
             <Text style={styles.infoTitle}>How VahanPing works</Text>
             <Text style={styles.infoText}>
@@ -123,7 +132,6 @@ export default function VehicleRegistrationScreen({ navigation }) {
             </Text>
           </View>
 
-          {/* Form */}
           <View style={styles.form}>
             <View style={styles.field}>
               <Text style={styles.label}>License Plate *</Text>
@@ -172,9 +180,7 @@ export default function VehicleRegistrationScreen({ navigation }) {
                     style={[styles.colorChip, color === c && styles.colorChipActive]}
                     onPress={() => setColor(c)}
                   >
-                    <Text style={[styles.colorChipText, color === c && styles.colorChipTextActive]}>
-                      {c}
-                    </Text>
+                    <Text style={[styles.colorChipText, color === c && styles.colorChipTextActive]}>{c}</Text>
                   </TouchableOpacity>
                 ))}
               </View>
@@ -202,7 +208,6 @@ export default function VehicleRegistrationScreen({ navigation }) {
               </View>
             </View>
 
-            {/* Call opt-in toggle */}
             <View style={styles.field}>
               <View style={styles.toggleRow}>
                 <View style={styles.toggleInfo}>
@@ -219,17 +224,12 @@ export default function VehicleRegistrationScreen({ navigation }) {
             </View>
           </View>
 
-          {/* Submit */}
           <TouchableOpacity
             style={[styles.submitBtn, loading && styles.submitBtnDisabled]}
             onPress={handleRegister}
             disabled={loading}
           >
-            {loading ? (
-              <ActivityIndicator color="#FFF" />
-            ) : (
-              <Text style={styles.submitBtnText}>Register & Get QR Code →</Text>
-            )}
+            {loading ? <ActivityIndicator color="#FFF" /> : <Text style={styles.submitBtnText}>Register & Get QR Code →</Text>}
           </TouchableOpacity>
 
           <View style={{ height: 40 }} />
@@ -247,162 +247,47 @@ function generateId() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0F0F0F' },
+  container: { flex: 1, backgroundColor: '#0A0A0F' },
   scroll: { padding: 20, paddingBottom: 90 },
-  header: {
-    marginBottom: 20,
-    paddingTop: 10,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    letterSpacing: -0.5,
-  },
-  headerSub: {
-    color: '#666',
-    fontSize: 14,
-    marginTop: 4,
-  },
+  header: { marginBottom: 20, paddingTop: 10 },
+  headerTitle: { fontSize: 28, fontWeight: '800', color: '#FFFFFF', letterSpacing: -0.5 },
+  headerSub: { color: '#666', fontSize: 14, marginTop: 4 },
   infoBox: {
-    backgroundColor: '#1A1A1A',
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 24,
-    borderLeftWidth: 3,
-    borderLeftColor: '#4CAF50',
+    backgroundColor: '#12121A', borderRadius: 14, padding: 16,
+    marginBottom: 24, borderLeftWidth: 3, borderLeftColor: '#7C3AED',
   },
-  infoTitle: {
-    color: '#4CAF50',
-    fontWeight: '700',
-    fontSize: 13,
-    marginBottom: 8,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-  },
-  infoText: {
-    color: '#AAA',
-    fontSize: 14,
-    lineHeight: 24,
-  },
+  infoTitle: { color: '#7C3AED', fontWeight: '700', fontSize: 13, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 },
+  infoText: { color: '#AAA', fontSize: 14, lineHeight: 24 },
   form: { gap: 20 },
   field: { marginBottom: 4 },
-  label: {
-    color: '#CCC',
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 8,
-  },
-  labelHint: {
-    color: '#555',
-    fontSize: 12,
-    marginBottom: 8,
-    marginTop: -4,
-  },
+  label: { color: '#CCC', fontSize: 14, fontWeight: '600', marginBottom: 8 },
+  labelHint: { color: '#555', fontSize: 12, marginBottom: 8, marginTop: -4 },
   input: {
-    backgroundColor: '#1A1A1A',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    color: '#FFF',
-    fontSize: 15,
-    borderWidth: 1,
-    borderColor: '#2A2A2A',
+    backgroundColor: '#12121A', borderRadius: 12, paddingHorizontal: 16,
+    paddingVertical: 14, color: '#FFF', fontSize: 15, borderWidth: 1, borderColor: '#22223A',
   },
-  plateInput: {
-    fontSize: 20,
-    fontWeight: '800',
-    letterSpacing: 3,
-    textAlign: 'center',
-    color: '#4CAF50',
-  },
-  phoneRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
+  plateInput: { fontSize: 20, fontWeight: '800', letterSpacing: 3, textAlign: 'center', color: '#7C3AED' },
+  phoneRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   phonePrefix: {
-    backgroundColor: '#1A1A1A',
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    borderWidth: 1,
-    borderColor: '#2A2A2A',
+    backgroundColor: '#12121A', borderRadius: 12, paddingHorizontal: 14,
+    paddingVertical: 14, borderWidth: 1, borderColor: '#22223A',
   },
-  phonePrefixText: {
-    color: '#4CAF50',
-    fontSize: 15,
-    fontWeight: '700',
-  },
-  phoneInput: {
-    flex: 1,
-  },
-  colorGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  colorChip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#2A2A2A',
-    backgroundColor: '#1A1A1A',
-  },
-  colorChipActive: {
-    backgroundColor: '#4CAF50',
-    borderColor: '#4CAF50',
-  },
-  colorChipText: {
-    color: '#888',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  colorChipTextActive: {
-    color: '#FFF',
-  },
+  phonePrefixText: { color: '#7C3AED', fontSize: 15, fontWeight: '700' },
+  phoneInput: { flex: 1 },
+  colorGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  colorChip: { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#22223A', backgroundColor: '#12121A' },
+  colorChipActive: { backgroundColor: '#7C3AED', borderColor: '#7C3AED' },
+  colorChipText: { color: '#888', fontSize: 13, fontWeight: '600' },
+  colorChipTextActive: { color: '#FFF' },
   toggleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#1A1A1A',
-    borderRadius: 12,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#2A2A2A',
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    backgroundColor: '#12121A', borderRadius: 12, padding: 16, borderWidth: 1, borderColor: '#22223A',
   },
   toggleInfo: { flex: 1, marginRight: 16 },
-  toggle: {
-    backgroundColor: '#2A2A2A',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    minWidth: 60,
-    alignItems: 'center',
-  },
-  toggleActive: {
-    backgroundColor: '#4CAF50',
-  },
-  toggleText: {
-    color: '#FFF',
-    fontWeight: '800',
-    fontSize: 13,
-  },
-  submitBtn: {
-    backgroundColor: '#4CAF50',
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 28,
-  },
-  submitBtnDisabled: {
-    opacity: 0.6,
-  },
-  submitBtnText: {
-    color: '#FFF',
-    fontSize: 17,
-    fontWeight: '800',
-  },
+  toggle: { backgroundColor: '#1A1A26', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 20, minWidth: 60, alignItems: 'center' },
+  toggleActive: { backgroundColor: '#7C3AED' },
+  toggleText: { color: '#FFF', fontWeight: '800', fontSize: 13 },
+  submitBtn: { backgroundColor: '#7C3AED', borderRadius: 14, paddingVertical: 16, alignItems: 'center', marginTop: 28 },
+  submitBtnDisabled: { opacity: 0.6 },
+  submitBtnText: { color: '#FFF', fontSize: 17, fontWeight: '800' },
 });
-

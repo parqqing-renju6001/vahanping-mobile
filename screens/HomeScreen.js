@@ -93,7 +93,7 @@ export default function HomeScreen({ navigation }) {
         <View style={{ flex: 1 }}>
           <Text style={styles.headerTitle}>VahanPing</Text>
           <Text style={styles.headerSub}>Your registered vehicles</Text>
-          <Text style={{color: pushToken ? '#4CAF50' : '#FF3B30', fontSize: 10, marginTop: 2}}>
+          <Text style={{color: pushToken ? '#7C3AED' : '#FF3B30', fontSize: 10, marginTop: 2}}>
             {pushToken ? '🟢 Push notifications ON' : '🔴 Push notifications OFF'}
           </Text>
         </View>
@@ -132,7 +132,7 @@ export default function HomeScreen({ navigation }) {
           renderItem={renderVehicle}
           contentContainerStyle={styles.list}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF6B00" />
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7C3AED" />
           }
           ListFooterComponent={
             <TouchableOpacity
@@ -151,7 +151,7 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0F0F0F',
+    backgroundColor: '#0A0A0F',
   },
   header: {
     flexDirection: 'row',
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   upgradeBtn: {
-    backgroundColor: '#FF6B00',
+    backgroundColor: '#7C3AED',
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
@@ -194,14 +194,14 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#1A1A1A',
+    backgroundColor: '#12121A',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: '#2A2A2A',
+    borderColor: '#22223A',
   },
   countText: {
-    color: '#FF6B00',
+    color: '#7C3AED',
     fontWeight: '800',
     fontSize: 16,
   },
@@ -211,14 +211,14 @@ const styles = StyleSheet.create({
     paddingBottom: 90,
   },
   card: {
-    backgroundColor: '#1A1A1A',
+    backgroundColor: '#12121A',
     borderRadius: 16,
     padding: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderWidth: 1,
-    borderColor: '#2A2A2A',
+    borderColor: '#22223A',
     marginBottom: 12,
   },
   cardLeft: {
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   plateContainer: {
-    backgroundColor: '#FF6B00',
+    backgroundColor: '#7C3AED',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 8,
@@ -263,11 +263,11 @@ const styles = StyleSheet.create({
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#4CAF50',
+    backgroundColor: '#7C3AED',
     marginRight: 5,
   },
   activeText: {
-    color: '#4CAF50',
+    color: '#7C3AED',
     fontSize: 11,
     fontWeight: '600',
   },
@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   qrBtn: {
-    backgroundColor: '#FF6B00',
+    backgroundColor: '#7C3AED',
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: 10,
@@ -288,7 +288,7 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
   deleteBtn: {
-    backgroundColor: '#2A2A2A',
+    backgroundColor: '#1A1A26',
     padding: 8,
     borderRadius: 10,
   },
@@ -320,7 +320,7 @@ const styles = StyleSheet.create({
     marginBottom: 32,
   },
   addFirstBtn: {
-    backgroundColor: '#FF6B00',
+    backgroundColor: '#7C3AED',
     paddingHorizontal: 28,
     paddingVertical: 14,
     borderRadius: 14,
@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
   },
   addMoreBtn: {
     borderWidth: 1.5,
-    borderColor: '#FF6B00',
+    borderColor: '#7C3AED',
     borderStyle: 'dashed',
     borderRadius: 14,
     paddingVertical: 16,
@@ -341,7 +341,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   addMoreText: {
-    color: '#FF6B00',
+    color: '#7C3AED',
     fontWeight: '700',
     fontSize: 15,
   },
