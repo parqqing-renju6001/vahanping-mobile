@@ -14,11 +14,6 @@ import QRCodeScreen from './screens/QRCodeScreen';
 import NotificationsScreen from './screens/NotificationsScreen';
 import PaymentScreen from './screens/PaymentScreen';
 
-
-
-
-
-
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
@@ -28,6 +23,7 @@ Notifications.setNotificationHandler({
     shouldPlaySound: true,
     shouldSetBadge: true,
   }),
+  
 });
 
 async function registerForPushNotificationsAsync() {
