@@ -3,7 +3,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
 import { Text, Platform } from 'react-native';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -13,6 +13,7 @@ import VehicleRegistrationScreen from './screens/VehicleRegistrationScreen';
 import QRCodeScreen from './screens/QRCodeScreen';
 import NotificationsScreen from './screens/NotificationsScreen';
 import PaymentScreen from './screens/PaymentScreen';
+import OnboardingScreen from './screens/OnboardingScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -23,7 +24,6 @@ Notifications.setNotificationHandler({
     shouldPlaySound: true,
     shouldSetBadge: true,
   }),
-  
 });
 
 async function registerForPushNotificationsAsync() {
@@ -44,7 +44,7 @@ async function registerForPushNotificationsAsync() {
       importance: Notifications.AndroidImportance.MAX,
       sound: 'default',
       vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#FF6B00',
+      lightColor: '#7C3AED',
     });
   }
   return token.data;
@@ -65,19 +65,16 @@ function MainTabs() {
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#0F0F0F',
-          borderTopColor: '#1E1E1E',
+          backgroundColor: '#0A0A0F',
+          borderTopColor: '#22223A',
           borderTopWidth: 1,
           height: 70,
           paddingBottom: 10,
           paddingTop: 6,
         },
-        tabBarActiveTintColor: '#FF6B00',
+        tabBarActiveTintColor: '#7C3AED',
         tabBarInactiveTintColor: '#555',
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '600',
-        },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
       }}
     >
       <Tab.Screen
@@ -111,8 +108,14 @@ function MainTabs() {
 export default function App() {
   const notificationListener = useRef();
   const responseListener = useRef();
+  const [showOnboarding, setShowOnboarding] = useState(null);
 
   useEffect(() => {
+    // Check if onboarding has been completed
+    AsyncStorage.getItem('onboarding_done').then(val => {
+      setShowOnboarding(val !== 'true');
+    });
+
     registerForPushNotificationsAsync().then(async token => {
       if (token) {
         console.log('Push token:', token);
@@ -146,10 +149,18 @@ export default function App() {
     };
   }, []);
 
+  // Wait until we know onboarding status
+  if (showOnboarding === null) return null;
+
   return (
     <NavigationContainer>
       <StatusBar style="light" />
       <Stack.Navigator screenOptions={{ headerShown: false }}>
+        {showOnboarding ? (
+          <Stack.Screen name="Onboarding" component={OnboardingScreen} />
+        ) : (
+          <Stack.Screen name="MainTabs" component={MainTabs} />
+        )}
         <Stack.Screen name="MainTabs" component={MainTabs} />
         <Stack.Screen name="QRCode" component={QRCodeScreen} />
         <Stack.Screen name="Payment" component={PaymentScreen} />
