@@ -136,9 +136,9 @@ export default function QRCodeScreen({ route, navigation }) {
         </View>
 
         {/* Order Sticker Button */}
-        <TouchableOpacity style={styles.orderBtn} onPress={() => setShowOrderModal(true)}>
-          <Text style={styles.orderBtnTitle}>📦 Order Physical QR Sticker</Text>
-          <Text style={styles.orderBtnSub}>Weatherproof sticker delivered to your door — ₹199</Text>
+        <TouchableOpacity style={styles.orderBtn} onPress={() => navigation.navigate('StickerDesign', { vehicle })}>
+        <Text style={styles.orderBtnTitle}>📦 Design & Order QR Sticker</Text>
+        <Text style={styles.orderBtnSub}>Choose your profession style — ₹199 delivered</Text>
         </TouchableOpacity>
 
         {/* Instructions */}

@@ -14,6 +14,9 @@ import QRCodeScreen from './screens/QRCodeScreen';
 import NotificationsScreen from './screens/NotificationsScreen';
 import PaymentScreen from './screens/PaymentScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
+import StickerDesignScreen from './screens/StickerDesignScreen';
+
+
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -164,6 +167,7 @@ export default function App() {
         <Stack.Screen name="MainTabs" component={MainTabs} />
         <Stack.Screen name="QRCode" component={QRCodeScreen} />
         <Stack.Screen name="Payment" component={PaymentScreen} />
+        <Stack.Screen name="StickerDesign" component={StickerDesignScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
