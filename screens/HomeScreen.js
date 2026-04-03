@@ -166,13 +166,21 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.headerSub}>Vehicle Protection</Text>
           </View>
         </View>
-        <TouchableOpacity
-          style={styles.upgradeBtn}
-          onPress={() => navigation.navigate('Payment')}
-        >
-          <BoltIcon size={13} color="#C9A84C" />
-          <Text style={styles.upgradeBtnText}>Upgrade</Text>
-        </TouchableOpacity>
+        <View style={{ flexDirection: 'row', gap: 8 }}>
+          <TouchableOpacity
+            style={styles.ordersBtn}
+            onPress={() => navigation.navigate('Orders')}
+          >
+            <Text style={styles.ordersBtnText}>📦 Orders</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.upgradeBtn}
+            onPress={() => navigation.navigate('Payment')}
+          >
+            <BoltIcon size={13} color="#C9A84C" />
+            <Text style={styles.upgradeBtnText}>Upgrade</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Stats bar */}
@@ -278,6 +286,8 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     marginTop: 1,
   },
+  ordersBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1A1A1A', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1, borderColor: '#2A2A2A' },
+  ordersBtnText: { fontSize: 12, fontWeight: '700', color: '#9D65F5' },
   upgradeBtn: {
     flexDirection: 'row',
     alignItems: 'center',
