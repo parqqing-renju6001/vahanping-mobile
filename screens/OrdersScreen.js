@@ -119,7 +119,8 @@ export default function OrdersScreen({ navigation }) {
       }
       setPhone(storedPhone);
 
-      const res = await fetch(`${BACKEND}/api/v1/orders/user/${encodeURIComponent(storedPhone)}`);
+      const queryPhone = storedPhone.replace(/^\+91/, '');
+      const res = await fetch(`${BACKEND}/api/v1/orders/user/${encodeURIComponent(queryPhone)}`);
       if (!res.ok) throw new Error('Failed to fetch');
       const data = await res.json();
       setOrders(data.orders || []);
