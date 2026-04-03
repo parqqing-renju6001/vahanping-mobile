@@ -49,12 +49,12 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   box: {
-    backgroundColor: '#12121A',
+    backgroundColor: '#F0F0F0',
     borderRadius: 20,
     padding: 28,
     width: '100%',
     borderWidth: 1,
-    borderColor: '#22223A',
+    borderColor: '#E0E0E0',
     alignItems: 'center',
   },
   icon: {
@@ -62,14 +62,14 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   title: {
-    color: '#FFF',
+    color: '#1A1A1A',
     fontSize: 20,
     fontWeight: '800',
     textAlign: 'center',
     marginBottom: 10,
   },
   message: {
-    color: '#888',
+    color: '#666666',
     fontSize: 14,
     textAlign: 'center',
     lineHeight: 22,
@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#1A1A26',
     borderWidth: 1,
-    borderColor: '#22223A',
+    borderColor: '#E0E0E0',
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   btnTextPrimary: {
-    color: '#FFF',
+    color: '#1A1A1A',
   },
   btnTextDestructive: {
     color: '#EF4444',

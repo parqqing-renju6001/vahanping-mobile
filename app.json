@@ -24,7 +24,6 @@
       },
       "package": "com.vahanping.app",
       "googleServicesFile": "./google-services.json"
-
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -34,6 +33,10 @@
         "projectId": "83f0d288-277a-4d76-a82a-ba6a7ddbf014"
       }
     },
-    "owner": "renju6001"
+    "owner": "renju6001",
+    "plugins": [
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth"
+    ]
   }
 }

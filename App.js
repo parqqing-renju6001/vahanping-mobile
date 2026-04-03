@@ -1,12 +1,14 @@
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StatusBar } from 'expo-status-bar';
-import { Text, Platform } from 'react-native';
+import { Platform } from 'react-native';
 import { useEffect, useRef, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import Svg, { Path, Circle } from 'react-native-svg';
 
 import HomeScreen from './screens/HomeScreen';
 import VehicleRegistrationScreen from './screens/VehicleRegistrationScreen';
@@ -15,11 +17,13 @@ import NotificationsScreen from './screens/NotificationsScreen';
 import PaymentScreen from './screens/PaymentScreen';
 import OnboardingScreen from './screens/OnboardingScreen';
 import StickerDesignScreen from './screens/StickerDesignScreen';
-
-
+import PhoneAuthScreen from './screens/PhoneAuthScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
+const navigationRef = createNavigationContainerRef();
+
+const BACKEND = 'https://parkping-wwur.onrender.com';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -53,97 +57,167 @@ async function registerForPushNotificationsAsync() {
   return token.data;
 }
 
-function TabIcon({ name, focused }) {
-  const icons = {
-    Home: focused ? '🚗' : '🚙',
-    Register: focused ? '➕' : '➕',
-    Notifications: focused ? '🔔' : '🔕',
-  };
-  return <Text style={{ fontSize: 20 }}>{icons[name]}</Text>;
-}
+const HomeTabIcon = ({ color, size }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+    <Path d="M9 22V12h6v10" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+  </Svg>
+);
+
+const AddTabIcon = ({ color, size }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Circle cx="12" cy="12" r="10" stroke={color} strokeWidth="1.8"/>
+    <Path d="M12 8v8M8 12h8" stroke={color} strokeWidth="1.8" strokeLinecap="round"/>
+  </Svg>
+);
+
+const AlertTabIcon = ({ color, size }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+  </Svg>
+);
 
 function MainTabs() {
+  const insets = useSafeAreaInsets();
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
         tabBarStyle: {
-          backgroundColor: '#0A0A0F',
-          borderTopColor: '#22223A',
+          backgroundColor: '#FFFFFF',
+          borderTopColor: '#E0E0E0',
           borderTopWidth: 1,
-          height: 70,
-          paddingBottom: 10,
-          paddingTop: 6,
+          height: 56 + insets.bottom,
+          paddingBottom: insets.bottom + 4,
+          paddingTop: 8,
         },
-        tabBarActiveTintColor: '#7C3AED',
-        tabBarInactiveTintColor: '#555',
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+        tabBarActiveTintColor: '#9D65F5',
+        tabBarInactiveTintColor: '#999999',
+        tabBarLabelStyle: { fontSize: 10, fontWeight: '600', letterSpacing: 0.3 },
       }}
     >
-      <Tab.Screen
-        name="Home"
-        component={HomeScreen}
-        options={{
-          tabBarLabel: 'My Vehicles',
-          tabBarIcon: ({ focused }) => <TabIcon name="Home" focused={focused} />,
-        }}
-      />
-      <Tab.Screen
-        name="Register"
-        component={VehicleRegistrationScreen}
-        options={{
-          tabBarLabel: 'Add Vehicle',
-          tabBarIcon: ({ focused }) => <TabIcon name="Register" focused={focused} />,
-        }}
-      />
-      <Tab.Screen
-        name="Notifications"
-        component={NotificationsScreen}
-        options={{
-          tabBarLabel: 'Alerts',
-          tabBarIcon: ({ focused }) => <TabIcon name="Notifications" focused={focused} />,
-        }}
-      />
+      <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: 'Vehicles', tabBarIcon: ({ color }) => <HomeTabIcon color={color} size={22} /> }} />
+      <Tab.Screen name="Register" component={VehicleRegistrationScreen} options={{ tabBarLabel: 'Register', tabBarIcon: ({ color }) => <AddTabIcon color={color} size={22} /> }} />
+      <Tab.Screen name="Notifications" component={NotificationsScreen} options={{ tabBarLabel: 'Alerts', tabBarIcon: ({ color }) => <AlertTabIcon color={color} size={22} /> }} />
     </Tab.Navigator>
   );
 }
 
 export default function App() {
+  const [initialRoute, setInitialRoute] = useState(null);
   const notificationListener = useRef();
   const responseListener = useRef();
-  const [showOnboarding, setShowOnboarding] = useState(null);
 
   useEffect(() => {
-    // Check if onboarding has been completed
-    AsyncStorage.getItem('onboarding_done').then(val => {
-      setShowOnboarding(val !== 'true');
-    });
+    const init = async () => {
+      const onboarding = await AsyncStorage.getItem('onboarding_done');
+      const authDone = await AsyncStorage.getItem('auth_done');
+
+      if (onboarding !== 'true') {
+        setInitialRoute('Onboarding');
+      } else if (authDone !== 'true') {
+        setInitialRoute('PhoneAuth');
+      } else {
+        setInitialRoute('MainTabs');
+      }
+    };
+    init();
 
     registerForPushNotificationsAsync().then(async token => {
       if (token) {
-        console.log('Push token:', token);
-        try {
-          const stored = await AsyncStorage.getItem('vehicles');
-          const vehicles = stored ? JSON.parse(stored) : [];
-          for (const vehicle of vehicles) {
-            await fetch('https://parkping-wwur.onrender.com/api/v1/push-token', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ qr_token: vehicle.token, push_token: token })
-            });
+        await AsyncStorage.setItem('expo_push_token', token);
+        // Sync push token with retry
+        const syncToken = async (retries = 3) => {
+          try {
+            const stored = await AsyncStorage.getItem('vehicles');
+            if (!stored) return;
+            const vehicles = JSON.parse(stored);
+            for (const vehicle of vehicles) {
+              const res = await fetch(`${BACKEND}/api/v1/push-token`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ qr_token: vehicle.token, push_token: token })
+              });
+              if (!res.ok && retries > 0) setTimeout(() => syncToken(retries - 1), 10000);
+            }
+          } catch (e) {
+            if (retries > 0) setTimeout(() => syncToken(retries - 1), 10000);
           }
-        } catch (e) {
-          console.log('Push token save error:', e);
-        }
+        };
+        syncToken();
       }
     });
 
-    notificationListener.current = Notifications.addNotificationReceivedListener(notification => {
-      console.log('Notification received:', notification);
+    // Save notification when received (app in foreground)
+    notificationListener.current = Notifications.addNotificationReceivedListener(async notification => {
+      try {
+        const stored = await AsyncStorage.getItem('vahanping_notifications');
+        const notifs = stored ? JSON.parse(stored) : [];
+        const newNotif = {
+          id: Date.now().toString(),
+          title: notification.request.content.title || 'VahanPing Alert',
+          message: notification.request.content.body || '',
+          time: new Date().toISOString(),
+          read: false,
+        };
+        const updated = [newNotif, ...notifs].slice(0, 50);
+        await AsyncStorage.setItem('vahanping_notifications', JSON.stringify(updated));
+      } catch (e) { console.log('Save notification error:', e); }
     });
 
-    responseListener.current = Notifications.addNotificationResponseReceivedListener(response => {
-      console.log('Notification response:', response);
+    // Save + navigate when notification tapped
+    responseListener.current = Notifications.addNotificationResponseReceivedListener(async response => {
+      try {
+        const content = response.notification.request.content;
+        const stored = await AsyncStorage.getItem('vahanping_notifications');
+        const notifs = stored ? JSON.parse(stored) : [];
+        const newNotif = {
+          id: Date.now().toString(),
+          title: content.title || 'VahanPing Alert',
+          message: content.body || '',
+          time: new Date().toISOString(),
+          read: false,
+        };
+        const exists = notifs.find(n => n.message === newNotif.message && Date.now() - new Date(n.time).getTime() < 10000);
+        if (!exists) {
+          const updated = [newNotif, ...notifs].slice(0, 50);
+          await AsyncStorage.setItem('vahanping_notifications', JSON.stringify(updated));
+        }
+      } catch (e) { console.log('Save on tap error:', e); }
+
+      setTimeout(() => {
+        if (navigationRef.isReady()) {
+          navigationRef.navigate('MainTabs', { screen: 'Notifications' });
+        }
+      }, 100);
+    });
+
+    // Handle app opened from killed state via notification
+    Notifications.getLastNotificationResponseAsync().then(async response => {
+      if (response) {
+        try {
+          const content = response.notification.request.content;
+          const stored = await AsyncStorage.getItem('vahanping_notifications');
+          const notifs = stored ? JSON.parse(stored) : [];
+          const newNotif = {
+            id: Date.now().toString(),
+            title: content.title || 'VahanPing Alert',
+            message: content.body || '',
+            time: new Date().toISOString(),
+            read: false,
+          };
+          const exists = notifs.find(n => n.message === newNotif.message && Date.now() - new Date(n.time).getTime() < 30000);
+          if (!exists) {
+            const updated = [newNotif, ...notifs].slice(0, 50);
+            await AsyncStorage.setItem('vahanping_notifications', JSON.stringify(updated));
+          }
+        } catch (e) {}
+        setTimeout(() => {
+          if (navigationRef.isReady()) {
+            navigationRef.navigate('MainTabs', { screen: 'Notifications' });
+          }
+        }, 500);
+      }
     });
 
     return () => {
@@ -152,23 +226,21 @@ export default function App() {
     };
   }, []);
 
-  // Wait until we know onboarding status
-  if (showOnboarding === null) return null;
+  if (initialRoute === null) return null;
 
   return (
-    <NavigationContainer>
-      <StatusBar style="light" />
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {showOnboarding ? (
+    <SafeAreaProvider>
+      <NavigationContainer ref={navigationRef}>
+        <StatusBar style="dark" />
+        <Stack.Navigator screenOptions={{ headerShown: false }} initialRouteName={initialRoute}>
           <Stack.Screen name="Onboarding" component={OnboardingScreen} />
-        ) : (
+          <Stack.Screen name="PhoneAuth" component={PhoneAuthScreen} />
           <Stack.Screen name="MainTabs" component={MainTabs} />
-        )}
-        <Stack.Screen name="MainTabs" component={MainTabs} />
-        <Stack.Screen name="QRCode" component={QRCodeScreen} />
-        <Stack.Screen name="Payment" component={PaymentScreen} />
-        <Stack.Screen name="StickerDesign" component={StickerDesignScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
+          <Stack.Screen name="QRCode" component={QRCodeScreen} />
+          <Stack.Screen name="Payment" component={PaymentScreen} />
+          <Stack.Screen name="StickerDesign" component={StickerDesignScreen} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 }

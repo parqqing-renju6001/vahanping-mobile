@@ -1,38 +1,88 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity,
-  StyleSheet, SafeAreaView, RefreshControl, Alert
+  StyleSheet, SafeAreaView, RefreshControl, Alert, StatusBar, Platform
 } from 'react-native';
+import Svg, { Path, Rect, Circle, Line, Polyline, G } from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
+import CustomModal from './CustomModal';
 
-const BACKEND = 'https://parkping-wwur.onrender.com';
 
+// ── Custom SVG Icons ────────────────────────────────────────────
+const CarIcon = ({ size = 24, color = '#fff' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path d="M5 17H3a2 2 0 01-2-2v-4l2.5-6h13L19 11v4a2 2 0 01-2 2h-2" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <Circle cx="7.5" cy="17.5" r="2.5" stroke={color} strokeWidth="1.5"/>
+    <Circle cx="16.5" cy="17.5" r="2.5" stroke={color} strokeWidth="1.5"/>
+    <Path d="M5 11h14M9 5l-1 6M15 5l1 6" stroke={color} strokeWidth="1.5" strokeLinecap="round"/>
+  </Svg>
+);
+
+const QRIcon = ({ size = 24, color = '#fff' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Rect x="3" y="3" width="7" height="7" rx="1" stroke={color} strokeWidth="1.5"/>
+    <Rect x="14" y="3" width="7" height="7" rx="1" stroke={color} strokeWidth="1.5"/>
+    <Rect x="3" y="14" width="7" height="7" rx="1" stroke={color} strokeWidth="1.5"/>
+    <Rect x="5" y="5" width="3" height="3" fill={color}/>
+    <Rect x="16" y="5" width="3" height="3" fill={color}/>
+    <Rect x="5" y="16" width="3" height="3" fill={color}/>
+    <Path d="M14 14h3v3h-3zM17 17h3v3h-3zM14 20h3" stroke={color} strokeWidth="1.5" strokeLinecap="round"/>
+  </Svg>
+);
+
+const TrashIcon = ({ size = 20, color = '#666' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Polyline points="3 6 5 6 21 6" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <Path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <Path d="M10 11v6M14 11v6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </Svg>
+);
+
+const BoltIcon = ({ size = 16, color = '#C9A84C' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </Svg>
+);
+
+const ShieldIcon = ({ size = 20, color = '#7C3AED' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <Path d="M9 12l2 2 4-4" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </Svg>
+);
+
+const PlusIcon = ({ size = 20, color = '#fff' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Line x1="12" y1="5" x2="12" y2="19" stroke={color} strokeWidth="1.5" strokeLinecap="round"/>
+    <Line x1="5" y1="12" x2="19" y2="12" stroke={color} strokeWidth="1.5" strokeLinecap="round"/>
+  </Svg>
+);
+
+const BellIcon = ({ size = 18, color = '#888' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+  </Svg>
+);
+
+// ── Component ────────────────────────────────────────────────────
 export default function HomeScreen({ navigation }) {
   const [vehicles, setVehicles] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [pushToken, setPushToken] = useState('');
 
   useEffect(() => {
-    AsyncStorage.getItem('expo_push_token').then(t => {
-      if (t) setPushToken(t);
-    });
+    AsyncStorage.getItem('expo_push_token').then(t => { if (t) setPushToken(t); });
   }, []);
 
   const loadVehicles = async () => {
     try {
       const stored = await AsyncStorage.getItem('vehicles');
       if (stored) setVehicles(JSON.parse(stored));
-    } catch (e) {
-      console.log('Error loading vehicles:', e);
-    }
+    } catch (e) { console.log(e); }
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      loadVehicles();
-    }, [])
-  );
+  useFocusEffect(useCallback(() => { loadVehicles(); }, []));
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -56,31 +106,48 @@ export default function HomeScreen({ navigation }) {
 
   const renderVehicle = ({ item }) => (
     <View style={styles.card}>
-      <View style={styles.cardLeft}>
-        <View style={styles.plateContainer}>
+      {/* Top row */}
+      <View style={styles.cardTop}>
+        <View style={styles.plateWrap}>
           <Text style={styles.plateText}>{item.plate}</Text>
         </View>
-        <View style={styles.vehicleInfo}>
-          <Text style={styles.vehicleName}>{item.nickname || item.model}</Text>
-          <Text style={styles.vehicleDetail}>{item.color} • {item.model}</Text>
-          <View style={styles.activeBadge}>
-            <View style={styles.activeDot} />
-            <Text style={styles.activeText}>Active</Text>
-          </View>
+        <View style={styles.activePill}>
+          <View style={styles.activeDot} />
+          <Text style={styles.activeText}>ACTIVE</Text>
         </View>
       </View>
+
+      {/* Vehicle info */}
+      <View style={styles.vehicleInfoRow}>
+        <CarIcon size={16} color="#555" />
+        <Text style={styles.vehicleMeta}>{item.color} · {item.model || 'Vehicle'}</Text>
+      </View>
+
+      {/* Divider */}
+      <View style={styles.cardDivider} />
+
+      {/* Actions */}
       <View style={styles.cardActions}>
         <TouchableOpacity
           style={styles.qrBtn}
           onPress={() => navigation.navigate('QRCode', { vehicle: item })}
         >
-          <Text style={styles.qrBtnText}>📲 QR</Text>
+          <QRIcon size={16} color="#fff" />
+          <Text style={styles.qrBtnText}>View QR</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.stickerBtn}
+          onPress={() => navigation.navigate('StickerDesign', { vehicle: item })}
+        >
+          <Text style={styles.stickerBtnText}>Design</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity
           style={styles.deleteBtn}
           onPress={() => deleteVehicle(item.id)}
         >
-          <Text style={styles.deleteBtnText}>🗑️</Text>
+          <TrashIcon size={18} color="#555" />
         </TouchableOpacity>
       </View>
     </View>
@@ -90,39 +157,58 @@ export default function HomeScreen({ navigation }) {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <View style={{ flex: 1 }}>
-          <Text style={styles.headerTitle}>VahanPing</Text>
-          <Text style={styles.headerSub}>Your registered vehicles</Text>
-          <Text style={{color: pushToken ? '#7C3AED' : '#FF3B30', fontSize: 10, marginTop: 2}}>
-            {pushToken ? '🟢 Push notifications ON' : '🔴 Push notifications OFF'}
-          </Text>
-        </View>
-        <View style={styles.headerRight}>
-          <TouchableOpacity
-            style={styles.upgradeBtn}
-            onPress={() => navigation.navigate('Payment')}
-          >
-            <Text style={styles.upgradeBtnText}>⚡ Upgrade</Text>
-          </TouchableOpacity>
-          <View style={styles.countBadge}>
-            <Text style={styles.countText}>{vehicles.length}</Text>
+        <View style={styles.headerLeft}>
+          <View style={styles.logoMark}>
+            <ShieldIcon size={18} color="#9D65F5" />
           </View>
+          <View>
+            <Text style={styles.headerTitle}>VahanPing</Text>
+            <Text style={styles.headerSub}>Vehicle Protection</Text>
+          </View>
+        </View>
+        <TouchableOpacity
+          style={styles.upgradeBtn}
+          onPress={() => navigation.navigate('Payment')}
+        >
+          <BoltIcon size={13} color="#C9A84C" />
+          <Text style={styles.upgradeBtnText}>Upgrade</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Stats bar */}
+      <View style={styles.statsBar}>
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>{vehicles.length}</Text>
+          <Text style={styles.statLabel}>Vehicles</Text>
+        </View>
+        <View style={styles.statDivider} />
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>{vehicles.length > 0 ? 'ON' : 'OFF'}</Text>
+          <Text style={styles.statLabel}>Protection</Text>
+        </View>
+        <View style={styles.statDivider} />
+        <View style={styles.statItem}>
+          <BellIcon size={16} color={pushToken ? '#9D65F5' : '#444'} />
+          <Text style={styles.statLabel}>Alerts</Text>
         </View>
       </View>
 
       {vehicles.length === 0 ? (
         <View style={styles.emptyState}>
-          <Text style={styles.emptyIcon}>🚗</Text>
-          <Text style={styles.emptyTitle}>No vehicles yet</Text>
+          <View style={styles.emptyIconWrap}>
+            <CarIcon size={40} color="#333" />
+          </View>
+          <Text style={styles.emptyTitle}>No vehicles registered</Text>
           <Text style={styles.emptyText}>
-            Add your vehicle and get a QR sticker to place on your car.{'\n'}
-            People can scan it to notify you anonymously!
+            Register your vehicle and get a QR sticker.{'\n'}
+            People can contact you anonymously when needed.
           </Text>
           <TouchableOpacity
             style={styles.addFirstBtn}
             onPress={() => navigation.navigate('Register')}
           >
-            <Text style={styles.addFirstBtnText}>+ Add Your First Vehicle</Text>
+            <PlusIcon size={18} color="#fff" />
+            <Text style={styles.addFirstBtnText}>Register Vehicle</Text>
           </TouchableOpacity>
         </View>
       ) : (
@@ -131,15 +217,14 @@ export default function HomeScreen({ navigation }) {
           keyExtractor={item => item.id}
           renderItem={renderVehicle}
           contentContainerStyle={styles.list}
-          refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7C3AED" />
-          }
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#7C3AED" />}
           ListFooterComponent={
             <TouchableOpacity
               style={styles.addMoreBtn}
               onPress={() => navigation.navigate('Register')}
             >
-              <Text style={styles.addMoreText}>+ Add Another Vehicle</Text>
+              <PlusIcon size={16} color="#555" />
+              <Text style={styles.addMoreText}>Register Another Vehicle</Text>
             </TouchableOpacity>
           }
         />
@@ -151,199 +236,290 @@ export default function HomeScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#0A0A0F',
+    backgroundColor: '#FFFFFF',
   },
+
+  // Header
   header: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingTop: Platform.OS === "android" ? (StatusBar.currentHeight || 24) + 8 : 16,
     paddingBottom: 16,
     borderBottomWidth: 1,
-    borderBottomColor: '#1E1E1E',
+    borderBottomColor: '#EBEBEB',
   },
-  headerTitle: {
-    fontSize: 26,
-    fontWeight: '800',
-    color: '#FFFFFF',
-    letterSpacing: -0.5,
-  },
-  headerSub: {
-    fontSize: 13,
-    color: '#666',
-    marginTop: 2,
-  },
-  headerRight: {
+  headerLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 12,
+  },
+  logoMark: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#0F0A1E',
+    borderWidth: 1,
+    borderColor: '#1E1030',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#1A1A1A',
+    letterSpacing: 0.2,
+  },
+  headerSub: {
+    fontSize: 11,
+    color: '#999999',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+    marginTop: 1,
   },
   upgradeBtn: {
-    backgroundColor: '#7C3AED',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#0F0C00',
+    borderWidth: 1,
+    borderColor: '#2A2200',
     paddingHorizontal: 14,
     paddingVertical: 8,
     borderRadius: 20,
   },
   upgradeBtnText: {
-    color: '#FFF',
-    fontWeight: '700',
+    color: '#C9A84C',
+    fontWeight: '600',
     fontSize: 13,
+    letterSpacing: 0.2,
   },
-  countBadge: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: '#12121A',
+
+  // Stats bar
+  statsBar: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#22223A',
+    paddingHorizontal: 24,
+    paddingVertical: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EBEBEB',
   },
-  countText: {
-    color: '#7C3AED',
-    fontWeight: '800',
-    fontSize: 16,
+  statItem: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 4,
   },
+  statValue: {
+    color: '#1A1A1A',
+    fontSize: 18,
+    fontWeight: '700',
+    letterSpacing: -0.5,
+  },
+  statLabel: {
+    color: '#999999',
+    fontSize: 10,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  statDivider: {
+    width: 1,
+    height: 28,
+    backgroundColor: '#EBEBEB',
+  },
+
+  // List
   list: {
     padding: 16,
+    paddingBottom: 100,
     gap: 12,
-    paddingBottom: 90,
   },
+
+  // Card
   card: {
-    backgroundColor: '#12121A',
+    backgroundColor: '#F5F5F5',
     borderRadius: 16,
-    padding: 16,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    marginBottom: 12,
+  },
+  cardTop: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    borderWidth: 1,
-    borderColor: '#22223A',
     marginBottom: 12,
   },
-  cardLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  plateContainer: {
-    backgroundColor: '#7C3AED',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+  plateWrap: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#DDDDDD',
     borderRadius: 8,
-    marginRight: 14,
-    minWidth: 80,
-    alignItems: 'center',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
   },
   plateText: {
-    color: '#FFF',
-    fontWeight: '900',
-    fontSize: 16,
-    letterSpacing: 2,
+    color: '#1A1A1A',
+    fontWeight: '800',
+    fontSize: 18,
+    letterSpacing: 3,
   },
-  vehicleInfo: {
-    flex: 1,
-  },
-  vehicleName: {
-    color: '#FFFFFF',
-    fontWeight: '700',
-    fontSize: 16,
-  },
-  vehicleDetail: {
-    color: '#888',
-    fontSize: 13,
-    marginTop: 2,
-  },
-  activeBadge: {
+  activePill: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 6,
+    gap: 6,
+    backgroundColor: 'rgba(124,58,237,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(124,58,237,0.15)',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 20,
   },
   activeDot: {
-    width: 6,
-    height: 6,
+    width: 5,
+    height: 5,
     borderRadius: 3,
     backgroundColor: '#7C3AED',
-    marginRight: 5,
   },
   activeText: {
     color: '#7C3AED',
-    fontSize: 11,
-    fontWeight: '600',
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 1,
+  },
+  vehicleInfoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+  vehicleMeta: {
+    color: '#888888',
+    fontSize: 13,
+    letterSpacing: 0.2,
+  },
+  cardDivider: {
+    height: 1,
+    backgroundColor: '#EBEBEB',
+    marginBottom: 14,
   },
   cardActions: {
     flexDirection: 'row',
-    gap: 8,
     alignItems: 'center',
+    justifyContent: 'space-between',
   },
   qrBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
     backgroundColor: '#7C3AED',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
     borderRadius: 10,
+    flex: 1,
+    marginRight: 10,
+    justifyContent: 'center',
   },
   qrBtnText: {
-    color: '#FFF',
-    fontWeight: '700',
-    fontSize: 13,
+    color: '#1A1A1A',
+    fontWeight: '600',
+    fontSize: 14,
+    letterSpacing: 0.2,
   },
   deleteBtn: {
-    backgroundColor: '#1A1A26',
-    padding: 8,
+    width: 42,
+    height: 42,
     borderRadius: 10,
+    backgroundColor: '#F5F5F5',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  deleteBtnText: {
-    fontSize: 16,
-  },
+
+  // Empty state
   emptyState: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 40,
-    paddingBottom: 90,
+    paddingBottom: 100,
   },
-  emptyIcon: {
-    fontSize: 72,
-    marginBottom: 20,
+  emptyIconWrap: {
+    width: 80,
+    height: 80,
+    borderRadius: 20,
+    backgroundColor: '#F5F5F5',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 24,
   },
   emptyTitle: {
-    color: '#FFF',
-    fontSize: 22,
-    fontWeight: '800',
-    marginBottom: 12,
+    color: '#1A1A1A',
+    fontSize: 20,
+    fontWeight: '700',
+    marginBottom: 10,
+    letterSpacing: -0.3,
   },
   emptyText: {
-    color: '#666',
-    fontSize: 15,
+    color: '#999999',
+    fontSize: 14,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: 32,
+    maxWidth: 280,
   },
   addFirstBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
     backgroundColor: '#7C3AED',
     paddingHorizontal: 28,
     paddingVertical: 14,
-    borderRadius: 14,
+    borderRadius: 12,
   },
   addFirstBtnText: {
-    color: '#FFF',
-    fontWeight: '700',
-    fontSize: 16,
-  },
-  addMoreBtn: {
-    borderWidth: 1.5,
-    borderColor: '#7C3AED',
-    borderStyle: 'dashed',
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: 'center',
-    marginTop: 4,
-    marginBottom: 20,
-  },
-  addMoreText: {
-    color: '#7C3AED',
+    color: '#1A1A1A',
     fontWeight: '700',
     fontSize: 15,
+    letterSpacing: 0.2,
   },
+
+  // Add more
+  addMoreBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 12,
+    paddingVertical: 14,
+    marginTop: 4,
+  },
+  addMoreText: {
+    color: '#999999',
+    fontWeight: '600',
+    fontSize: 14,
+    letterSpacing: 0.2,
+  },
+
+  stickerBtn: {
+    backgroundColor: '#EBEBEB',
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+  },
+  stickerBtnText: {
+    color: '#777777',
+    fontWeight: '600',
+    fontSize: 13,
+  },
+
 });
+
 

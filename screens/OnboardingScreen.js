@@ -14,7 +14,7 @@ const SLIDES = [
     title: 'Welcome to\nVahanPing',
     subtitle: 'India\'s smartest anonymous vehicle contact system',
     color: '#7C3AED',
-    bg: '#12121A',
+    bg: '#F0F0F0',
   },
   {
     id: '2',
@@ -22,7 +22,7 @@ const SLIDES = [
     title: 'Register Your\nVehicle',
     subtitle: 'Add your car details and get a unique QR code in under 2 minutes',
     color: '#9D65F5',
-    bg: '#12121A',
+    bg: '#F0F0F0',
   },
   {
     id: '3',
@@ -30,7 +30,7 @@ const SLIDES = [
     title: '100% Anonymous\nAlways',
     subtitle: 'Your phone number is never revealed. Complete privacy on both sides',
     color: '#10B981',
-    bg: '#12121A',
+    bg: '#F0F0F0',
   },
   {
     id: '4',
@@ -38,7 +38,7 @@ const SLIDES = [
     title: 'Instant WhatsApp\nAlerts',
     subtitle: 'Get notified instantly when someone scans your QR code',
     color: '#F59E0B',
-    bg: '#12121A',
+    bg: '#F0F0F0',
   },
   {
     id: '5',
@@ -46,7 +46,7 @@ const SLIDES = [
     title: 'Premium QR\nStickers',
     subtitle: 'Order weatherproof stickers delivered to your doorstep for just ₹199',
     color: '#EF4444',
-    bg: '#12121A',
+    bg: '#F0F0F0',
   },
 ];
 
@@ -55,10 +55,10 @@ export default function OnboardingScreen({ navigation }) {
   const flatListRef = useRef(null);
   const scrollX = useRef(new Animated.Value(0)).current;
 
-  const handleDone = async () => {
+    const handleDone = async () => {
     await AsyncStorage.setItem('onboarding_done', 'true');
-    navigation.replace('Home');
-  };
+    navigation.replace('PhoneAuth');
+};
 
   const handleNext = () => {
     if (currentIndex < SLIDES.length - 1) {
@@ -84,7 +84,7 @@ export default function OnboardingScreen({ navigation }) {
       </View>
 
       {/* Text */}
-      <Text style={[styles.slideTitle, { color: '#FFF' }]}>{item.title}</Text>
+      <Text style={[styles.slideTitle, { color: '#1A1A1A' }]}>{item.title}</Text>
       <Text style={styles.slideSubtitle}>{item.subtitle}</Text>
 
       {/* Step indicator */}
@@ -152,7 +152,7 @@ export default function OnboardingScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#0A0A0F', alignItems: 'center' },
+  container: { flex: 1, backgroundColor: '#FFFFFF', alignItems: 'center' },
 
   skipBtn: {
     position: 'absolute',
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     zIndex: 10,
     padding: 8,
   },
-  skipText: { color: '#666', fontSize: 14, fontWeight: '600' },
+  skipText: { color: '#777777', fontSize: 14, fontWeight: '600' },
 
   slide: {
     flex: 1,
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     marginBottom: 48,
   },
   logo: { width: 40, height: 40, borderRadius: 10 },
-  logoText: { fontSize: 22, fontWeight: '800', color: '#FFF' },
+  logoText: { fontSize: 22, fontWeight: '800', color: '#1A1A1A' },
 
   iconCircle: {
     width: 120,
@@ -201,7 +201,7 @@ const styles = StyleSheet.create({
   },
   slideSubtitle: {
     fontSize: 16,
-    color: '#888',
+    color: '#666666',
     textAlign: 'center',
     lineHeight: 26,
     maxWidth: 300,
@@ -232,5 +232,5 @@ const styles = StyleSheet.create({
     minWidth: 200,
     alignItems: 'center',
   },
-  nextBtnText: { color: '#FFF', fontSize: 16, fontWeight: '800' },
+  nextBtnText: { color: '#1A1A1A', fontSize: 16, fontWeight: '800' },
 });
