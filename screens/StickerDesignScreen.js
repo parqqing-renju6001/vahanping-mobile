@@ -240,7 +240,7 @@
             </View>
           </View>
 
-          <TouchableOpacity style={s.orderBtn} onPress={() => navigation.navigate('Payment')}>
+          <TouchableOpacity style={s.orderBtn} onPress={() => navigation.navigate('Payment', { autoOpenPlan: 'sticker', stickerTemplate: selectedTemplate.id, vehiclePlate: vehicle.plate, vehicleToken: vehicle.token })}>
             <Text style={s.orderBtnText}>Order This Sticker — ₹199</Text>
           </TouchableOpacity>
 
