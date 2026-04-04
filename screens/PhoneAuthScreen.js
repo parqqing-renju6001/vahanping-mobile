@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import {
   View, Text, TextInput, TouchableOpacity,
   StyleSheet, SafeAreaView, ActivityIndicator,
-  KeyboardAvoidingView, Platform
+  KeyboardAvoidingView, Platform, Image
 } from 'react-native';
 import auth from '@react-native-firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -71,6 +71,24 @@ export default function PhoneAuthScreen({ navigation }) {
         }),
       }).catch(e => console.log('Register error:', e));
 
+      // Fetch vehicles from backend and restore to AsyncStorage
+      try {
+        const vRes = await fetch(`${BACKEND}/api/v1/user/vehicles/${encodeURIComponent(userPhone)}`);
+        const vData = await vRes.json();
+        if (vData.vehicles && vData.vehicles.length > 0) {
+          const existing = await AsyncStorage.getItem('vehicles');
+          const local = existing ? JSON.parse(existing) : [];
+          // Merge backend vehicles with local ones
+          const merged = [...local];
+          for (const bv of vData.vehicles) {
+            if (!merged.find(lv => lv.token === bv.qr_token)) {
+              merged.push({ id: bv.qr_token, plate: bv.plate, model: bv.model, color: bv.color, token: bv.qr_token });
+            }
+          }
+          await AsyncStorage.setItem('vehicles', JSON.stringify(merged));
+        }
+      } catch (e) { console.log('Vehicle restore error:', e); }
+
       navigation.replace('MainTabs');
     } catch (e) {
       console.log('OTP verify error:', e);
@@ -87,9 +105,7 @@ export default function PhoneAuthScreen({ navigation }) {
 
           {/* Logo */}
           <View style={s.logoWrap}>
-            <View style={s.logoIcon}>
-              <Text style={s.logoText}>V</Text>
-            </View>
+            <Image source={require('../assets/icon.png')} style={s.logoIcon} resizeMode="contain" />
             <Text style={s.appName}>VahanPing</Text>
             <Text style={s.appTagline}>Vehicle Protection</Text>
           </View>
@@ -171,7 +187,7 @@ const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#FFFFFF' },
   content: { flex: 1, padding: 28, justifyContent: 'center' },
   logoWrap: { alignItems: 'center', marginBottom: 48 },
-  logoIcon: { width: 64, height: 64, borderRadius: 18, backgroundColor: '#7C3AED', alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  logoIcon: { width: 72, height: 72, borderRadius: 18, marginBottom: 12 },
   logoText: { color: '#FFF', fontSize: 28, fontWeight: '900' },
   appName: { fontSize: 26, fontWeight: '800', color: '#111827', letterSpacing: -0.5 },
   appTagline: { fontSize: 13, color: '#6B7280', marginTop: 4 },
