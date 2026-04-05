@@ -174,6 +174,12 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.ordersBtnText}>📦 Orders</Text>
           </TouchableOpacity>
           <TouchableOpacity
+            style={styles.shopBtn}
+            onPress={() => require('expo-linking').openURL('https://www.vahanping.com/shop')}
+          >
+            <Text style={styles.shopBtnText}>🏪 Shop</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
             style={styles.upgradeBtn}
             onPress={() => navigation.navigate('Payment')}
           >
@@ -287,6 +293,8 @@ const styles = StyleSheet.create({
     marginTop: 1,
   },
   ordersBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1A1A1A', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1, borderColor: '#2A2A2A' },
+  shopBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1A1A1A', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1, borderColor: '#C9A84C' },
+  shopBtnText: { fontSize: 12, fontWeight: '700', color: '#C9A84C' },
   ordersBtnText: { fontSize: 12, fontWeight: '700', color: '#9D65F5' },
   upgradeBtn: {
     flexDirection: 'row',
