@@ -175,7 +175,7 @@ export default function HomeScreen({ navigation }) {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.shopBtn}
-            onPress={() => require('expo-linking').openURL('https://www.vahanping.com/shop')}
+            onPress={() => require('react-native').Linking.openURL('https://www.vahanping.com/shop')}
           >
             <Text style={styles.shopBtnText}>🏪 Shop</Text>
           </TouchableOpacity>
