@@ -23,9 +23,10 @@
   ];
 
   const TEMPLATES = [
-    { id: 'gold',     label: '🥇 Gold',     image: require('../assets/sticker_gold.jpg'),     textColor: '#C9A84C', qrBorder: '#C9A84C' },
-    { id: 'silver',   label: '🥈 Silver',   image: require('../assets/sticker_silver.jpg'),   textColor: '#C0C0C0', qrBorder: '#A8A8A8' },
-    { id: 'titanium', label: '⚫ Titanium', image: require('../assets/sticker_titanium.jpg'), textColor: '#B0B0B0', qrBorder: '#888888' },
+    { id: 'navy_tag',   label: 'Navy Classic',  image: require('../assets/sticker_navy_tag.jpg'),   textColor: '#C9A84C', qrBorder: '#C9A84C' },
+    { id: 'red_tag',    label: 'Royal Red',     image: require('../assets/sticker_red_tag.jpg'),    textColor: '#C9A84C', qrBorder: '#C9A84C' },
+    { id: 'navy_elite', label: 'Navy Elite',    image: require('../assets/sticker_navy_elite.jpg'), textColor: '#C9A84C', qrBorder: '#C9A84C' },
+    { id: 'gold_plate', label: 'Gold Plate',    image: require('../assets/sticker_gold_plate.jpg'), textColor: '#C9A84C', qrBorder: '#C9A84C' },
   ];
 
   const STICKER_SIZE = 300;
@@ -55,41 +56,22 @@
     });
   };
 
-  // ── Circle Badge Sticker ──────────────────────────────────────────
+  // ── Rectangle Sticker ──────────────────────────────────────────
   const CircleBadgeSticker = ({ label, template, qrUrl, hasImage, professionImage }) => {
-    const displayLabel = label || 'VAHANPING';
-    const letters = getCurvedLetters(displayLabel);
-    const { image, textColor, qrBorder } = template;
+    const { image, qrBorder } = template;
+    const W = STICKER_SIZE;
+    const H = Math.round(STICKER_SIZE * 1.4);
 
     return (
-      <View style={{ width: STICKER_SIZE, height: STICKER_SIZE, position: 'relative' }}>
+      <View style={{ width: W, height: H, position: 'relative', borderRadius: 16, overflow: 'hidden' }}>
         <Image
           source={image}
-          style={{ width: STICKER_SIZE, height: STICKER_SIZE, position: 'absolute' }}
-          resizeMode="contain"
+          style={{ width: W, height: H, position: 'absolute' }}
+          resizeMode="cover"
         />
-        {letters.map((item, i) => (
-          <Text
-            key={i}
-            style={{
-              position: 'absolute',
-              left: item.x - 7,
-              top: item.y - 9,
-              color: textColor,
-              fontSize: 13,
-              fontWeight: '900',
-              transform: [{ rotate: `${item.rot}deg` }],
-              textShadowColor: 'rgba(0,0,0,0.9)',
-              textShadowOffset: { width: 0, height: 1 },
-              textShadowRadius: 2,
-            }}
-          >
-            {item.char}
-          </Text>
-        ))}
         <View style={{
           position: 'absolute',
-          top: 0, left: 0, right: 0, bottom: 30,
+          top: 0, left: 0, right: 0, bottom: 0,
           alignItems: 'center',
           justifyContent: 'center',
         }}>
