@@ -23,10 +23,12 @@
   ];
 
   const TEMPLATES = [
-    { id: 'navy_tag',   label: 'Navy Classic',  image: require('../assets/sticker_navy_tag.jpg'),   textColor: '#C9A84C', qrBorder: '#C9A84C' },
-    { id: 'red_tag',    label: 'Royal Red',     image: require('../assets/sticker_red_tag.jpg'),    textColor: '#C9A84C', qrBorder: '#C9A84C' },
-    { id: 'navy_elite', label: 'Navy Elite',    image: require('../assets/sticker_navy_elite.jpg'), textColor: '#C9A84C', qrBorder: '#C9A84C' },
-    { id: 'gold_plate', label: 'Gold Plate',    image: require('../assets/sticker_gold_plate.jpg'), textColor: '#C9A84C', qrBorder: '#C9A84C' },
+    { id: 'blackgold', label: 'Black Gold',  image: require('../assets/sticker_blackgold.jpg'),  textColor: '#C9A84C', qrBorder: '#C9A84C' },
+    { id: 'bluegold',  label: 'Blue Gold',   image: require('../assets/sticker_bluegold.jpg'),   textColor: '#C9A84C', qrBorder: '#4A90D9' },
+    { id: 'greengold', label: 'Green Gold',  image: require('../assets/sticker_greengold.jpg'),  textColor: '#C9A84C', qrBorder: '#2D7A3A' },
+    { id: 'pinggold',  label: 'Rose Gold',   image: require('../assets/sticker_pinggold.jpg'),   textColor: '#C9A84C', qrBorder: '#C9A484' },
+    { id: 'puregold',  label: 'Pure Gold',   image: require('../assets/sticker_puregold.jpg'),   textColor: '#C9A84C', qrBorder: '#C9A84C' },
+    { id: 'redgold',   label: 'Red Gold',    image: require('../assets/sticker_redgold.jpg'),    textColor: '#C9A84C', qrBorder: '#8B1A1A' },
   ];
 
   const STICKER_SIZE = 300;
@@ -56,39 +58,69 @@
     });
   };
 
-  // ── Rectangle Sticker ──────────────────────────────────────────
+  // ── Square Sticker ──────────────────────────────────────────────
+  // Template layout:
+  //   Top ~20% = profession image area
+  //   Middle ~55% = dark QR rectangle area
+  //   Bottom ~25% = VahanPing branding strip
   const CircleBadgeSticker = ({ label, template, qrUrl, hasImage, professionImage }) => {
     const { image, qrBorder } = template;
-    const W = STICKER_SIZE;
-    const H = Math.round(STICKER_SIZE * 1.4);
+    const SIZE = STICKER_SIZE; // square
+
+    // QR area sits in the middle dark rectangle
+    // Top padding ~20%, bottom strip ~22%, so QR area is from 20% to 78%
+    const topPad = Math.round(SIZE * 0.20);
+    const qrAreaH = Math.round(SIZE * 0.58);
+    const qrSize = hasImage ? 90 : 110;
 
     return (
-      <View style={{ width: W, height: H, position: 'relative', borderRadius: 16, overflow: 'hidden' }}>
+      <View style={{ width: SIZE, height: SIZE, position: 'relative', borderRadius: 16, overflow: 'hidden' }}>
+        {/* Background template image */}
         <Image
           source={image}
-          style={{ width: W, height: H, position: 'absolute' }}
+          style={{ width: SIZE, height: SIZE, position: 'absolute' }}
           resizeMode="cover"
         />
+
+        {/* Profession image — top area */}
+        {hasImage && professionImage && (
+          <View style={{
+            position: 'absolute',
+            top: 0, left: 0, right: 0,
+            height: topPad,
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <Image
+              source={professionImage}
+              style={{ width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: qrBorder }}
+              resizeMode="cover"
+            />
+          </View>
+        )}
+
+        {/* QR code — centered in dark rectangle area */}
         <View style={{
           position: 'absolute',
-          top: 0, left: 0, right: 0, bottom: 0,
+          top: topPad,
+          left: 0, right: 0,
+          height: qrAreaH,
           alignItems: 'center',
           justifyContent: 'center',
         }}>
-          {hasImage && professionImage && (
-            <Image
-              source={professionImage}
-              style={{ width: 40, height: 40, borderRadius: 20, borderWidth: 2.5, borderColor: qrBorder, marginBottom: 8 }}
-              resizeMode="cover"
-            />
-          )}
           <View style={{
-            backgroundColor: '#fff', padding: 5, borderRadius: 10,
-            borderWidth: 3, borderColor: qrBorder,
-            elevation: 6, shadowColor: qrBorder,
-            shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.7, shadowRadius: 6,
+            backgroundColor: '#fff',
+            padding: 5,
+            borderRadius: 8,
+            borderWidth: 2,
+            borderColor: qrBorder,
+            elevation: 4,
+            shadowColor: '#000',
+            shadowOffset: { width: 0, height: 0 },
+            shadowOpacity: 0.5,
+            shadowRadius: 4,
           }}>
-            <QRCode value={qrUrl} size={hasImage ? 90 : 106} backgroundColor="white" color="#000" />
+            <QRCode value={qrUrl} size={qrSize} backgroundColor="white" color="#000" />
           </View>
         </View>
       </View>
