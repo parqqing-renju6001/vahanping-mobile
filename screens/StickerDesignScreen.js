@@ -82,22 +82,40 @@
           resizeMode="cover"
         />
 
-        {/* Profession image — top area */}
-        {hasImage && professionImage && (
-          <View style={{
-            position: 'absolute',
-            top: 0, left: 0, right: 0,
-            height: topPad,
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}>
+        {/* Profession image + label — top strip */}
+        <View style={{
+          position: 'absolute',
+          top: Math.round(SIZE * 0.04),
+          left: 0, right: 0,
+          height: Math.round(SIZE * 0.22),
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          paddingHorizontal: 16,
+          gap: 10,
+        }}>
+          {hasImage && professionImage && (
             <Image
               source={professionImage}
-              style={{ width: 44, height: 44, borderRadius: 22, borderWidth: 2, borderColor: qrBorder }}
+              style={{ width: 28, height: 28, borderRadius: 14, borderWidth: 1.5, borderColor: qrBorder }}
               resizeMode="cover"
             />
-          </View>
-        )}
+          )}
+          {label ? (
+            <Text style={{
+              color: qrBorder,
+              fontSize: 13,
+              fontWeight: '900',
+              letterSpacing: 2,
+              textTransform: 'uppercase',
+              textShadowColor: 'rgba(0,0,0,0.9)',
+              textShadowOffset: { width: 0, height: 1 },
+              textShadowRadius: 3,
+            }}>
+              {label.toUpperCase()}
+            </Text>
+          ) : null}
+        </View>
 
         {/* QR code — centered in dark rectangle area */}
         <View style={{
