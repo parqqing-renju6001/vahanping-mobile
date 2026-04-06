@@ -4,7 +4,7 @@ import {
   StyleSheet, SafeAreaView, ActivityIndicator,
   KeyboardAvoidingView, Platform, Image
 } from 'react-native';
-import auth from '@react-native-firebase/auth';
+// WhatsApp OTP auth
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const BACKEND = 'https://parkping-wwur.onrender.com';
@@ -26,11 +26,18 @@ export default function PhoneAuthScreen({ navigation }) {
     setLoading(true);
     setError('');
     try {
-      const fullPhone = `+91${phone}`;
-      const result = await auth().signInWithPhoneNumber(fullPhone);
-      setConfirmation(result);
-      setStep('otp');
-      setTimeout(() => otpRef.current?.focus(), 300);
+      const res = await fetch(`${BACKEND}/api/v1/auth/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: `+91${phone}` }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setStep('otp');
+        setTimeout(() => otpRef.current?.focus(), 300);
+      } else {
+        setError(data.error || 'Failed to send OTP. Please try again.');
+      }
     } catch (e) {
       console.log('OTP send error:', e);
       setError('Failed to send OTP. Please try again.');
@@ -47,9 +54,18 @@ export default function PhoneAuthScreen({ navigation }) {
     setLoading(true);
     setError('');
     try {
-      await confirmation.confirm(otp);
-      const user = auth().currentUser;
-      const userPhone = user.phoneNumber; // +91XXXXXXXXXX
+      const res = await fetch(`${BACKEND}/api/v1/auth/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: `+91${phone}`, otp }),
+      });
+      const data = await res.json();
+      if (!data.success) {
+        setError(data.error || 'Invalid OTP. Please try again.');
+        setLoading(false);
+        return;
+      }
+      const userPhone = data.phone; // +91XXXXXXXXXX
 
       // Save phone to AsyncStorage
       await AsyncStorage.setItem('user_phone', userPhone);
@@ -113,7 +129,7 @@ export default function PhoneAuthScreen({ navigation }) {
           {step === 'phone' ? (
             <View style={s.form}>
               <Text style={s.title}>Enter your mobile number</Text>
-              <Text style={s.subtitle}>We'll send you a one-time verification code</Text>
+              <Text style={s.subtitle}>We'll send you an OTP via WhatsApp</Text>
 
               <View style={s.phoneRow}>
                 <View style={s.countryCode}>
@@ -144,7 +160,7 @@ export default function PhoneAuthScreen({ navigation }) {
           ) : (
             <View style={s.form}>
               <Text style={s.title}>Enter verification code</Text>
-              <Text style={s.subtitle}>Sent to +91 {phone}</Text>
+              <Text style={s.subtitle}>Sent to your WhatsApp: +91 {phone}</Text>
 
               <TextInput
                 ref={otpRef}
