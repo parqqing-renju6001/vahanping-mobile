@@ -163,6 +163,10 @@ export default function App() {
         };
         const updated = [newNotif, ...notifs].slice(0, 50);
         await AsyncStorage.setItem('vahanping_notifications', JSON.stringify(updated));
+        // Auto navigate to Alerts tab when notification arrives in foreground
+        if (navigationRef.isReady()) {
+          navigationRef.navigate('MainTabs', { screen: 'Notifications' });
+        }
       } catch (e) { console.log('Save notification error:', e); }
     });
 
