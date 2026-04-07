@@ -24,7 +24,7 @@ const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 const navigationRef = createNavigationContainerRef();
 
-const BACKEND = 'https://parkping-wwur.onrender.com';
+const BACKEND = 'https://api.vahanping.com';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({

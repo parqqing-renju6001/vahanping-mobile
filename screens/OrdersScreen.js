@@ -7,7 +7,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import Svg, { Path } from 'react-native-svg';
 
-const BACKEND = 'https://parkping-wwur.onrender.com';
+const BACKEND = 'https://api.vahanping.com';
 const ACCENT  = '#7C3AED';
 const LIGHT   = '#9D65F5';
 

@@ -7,7 +7,7 @@ import RazorpayCheckout from 'react-native-razorpay';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const RAZORPAY_KEY = 'rzp_test_SUHS20b7ZKOzJ5';
-const BACKEND = 'https://parkping-wwur.onrender.com';
+const BACKEND = 'https://api.vahanping.com';
 
 const INDIVIDUAL_PLANS = [
   { id: 'whatsapp', icon: '💬', name: 'WhatsApp Alerts', price: 99,  description: 'Instant WhatsApp notification when someone scans your QR', highlight: 'Most Popular', needsAddress: false },

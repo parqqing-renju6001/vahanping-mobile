@@ -8,7 +8,7 @@ import Svg, { Path, Circle, Line, Polyline } from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CustomModal from './CustomModal';
 
-const BACKEND = 'https://parkping-wwur.onrender.com';
+const BACKEND = 'https://api.vahanping.com';
 const COLORS = ['White', 'Black', 'Silver', 'Red', 'Blue', 'Grey', 'Green', 'Yellow', 'Orange', 'Other'];
 
 const CarIcon = ({ size = 20, color = '#555' }) => (

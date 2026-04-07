@@ -8,7 +8,7 @@ import Svg, { Path, Circle, Line, Rect, Polyline, G } from 'react-native-svg';
 import QRCode from 'react-native-qrcode-svg';
 import CustomModal from './CustomModal';
 
-const BACKEND = 'https://parkping-wwur.onrender.com';
+const BACKEND = 'https://api.vahanping.com';
 const CALLER_WEB = 'https://vahanping.com';
 
 // ── SVG Icons ────────────────────────────────────────────────────

@@ -7,7 +7,7 @@ import {
 import auth from '@react-native-firebase/auth';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const BACKEND = 'https://parkping-wwur.onrender.com';
+const BACKEND = 'https://api.vahanping.com';
 
 export default function PhoneAuthScreen({ navigation }) {
   const [phone, setPhone] = useState('');
