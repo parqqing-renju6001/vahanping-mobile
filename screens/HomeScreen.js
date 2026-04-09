@@ -1,12 +1,15 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity,
-  StyleSheet, SafeAreaView, RefreshControl, Alert, StatusBar, Platform
+  StyleSheet, SafeAreaView, RefreshControl, StatusBar, Platform,
+  Switch, Modal, ScrollView,
 } from 'react-native';
 import Svg, { Path, Rect, Circle, Line, Polyline, G } from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useFocusEffect } from '@react-navigation/native';
 import CustomModal from './CustomModal';
+
+const BACKEND = 'https://api.vahanping.com';
 
 
 // ── Custom SVG Icons ────────────────────────────────────────────
@@ -66,10 +69,18 @@ const BellIcon = ({ size = 18, color = '#888' }) => (
 );
 
 // ── Component ────────────────────────────────────────────────────
+const DESIGN_ELIGIBLE = ['Car', 'Scooter', 'Bike'];
+
 export default function HomeScreen({ navigation }) {
   const [vehicles, setVehicles] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
   const [pushToken, setPushToken] = useState('');
+  const [deleteModal, setDeleteModal] = useState({ visible: false, vehicleId: null, plate: '' });
+  const [activeBtn, setActiveBtn] = useState(null);
+  const [settingsModal, setSettingsModal] = useState({ visible: false, vehicle: null });
+  const [settingsToggles, setSettingsToggles] = useState({ push: true, whatsapp: false, call: false, sms: false });
+  const [hasBundlePlan, setHasBundlePlan] = useState(false);
+  const [upsellModal, setUpsellModal] = useState({ visible: false, feature: '' });
 
   useEffect(() => {
     AsyncStorage.getItem('expo_push_token').then(t => { if (t) setPushToken(t); });
@@ -82,7 +93,10 @@ export default function HomeScreen({ navigation }) {
     } catch (e) { console.log(e); }
   };
 
-  useFocusEffect(useCallback(() => { loadVehicles(); }, []));
+  useFocusEffect(useCallback(() => {
+    loadVehicles();
+    setActiveBtn(null);
+  }, []));
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -90,22 +104,63 @@ export default function HomeScreen({ navigation }) {
     setRefreshing(false);
   };
 
-  const deleteVehicle = (id) => {
-    Alert.alert('Remove Vehicle', 'Remove this vehicle from VahanPing?', [
-      { text: 'Cancel', style: 'cancel' },
-      {
-        text: 'Remove', style: 'destructive',
-        onPress: async () => {
-          const updated = vehicles.filter(v => v.id !== id);
-          setVehicles(updated);
-          await AsyncStorage.setItem('vehicles', JSON.stringify(updated));
-        }
-      }
-    ]);
+  const confirmDelete = (id, plate) => {
+    setDeleteModal({ visible: true, vehicleId: id, plate });
+  };
+
+  const executeDelete = async () => {
+    const id = deleteModal.vehicleId;
+    setDeleteModal({ visible: false, vehicleId: null, plate: '' });
+    const updated = vehicles.filter(v => v.id !== id);
+    setVehicles(updated);
+    await AsyncStorage.setItem('vehicles', JSON.stringify(updated));
+  };
+
+  const openSettings = async (vehicle) => {
+    const bundlePurchased = await AsyncStorage.getItem('bundle_purchased');
+    setHasBundlePlan(bundlePurchased === 'true');
+    const stored = await AsyncStorage.getItem(`prefs_${vehicle.id}`);
+    setSettingsToggles(stored ? JSON.parse(stored) : { push: true, whatsapp: false, call: false, sms: false });
+    setSettingsModal({ visible: true, vehicle });
+  };
+
+  const handleToggle = (key, value) => {
+    if ((key === 'call' || key === 'whatsapp' || key === 'sms') && value && !hasBundlePlan) {
+      const featureName = key === 'call' ? 'anonymous calls' : key === 'whatsapp' ? 'WhatsApp alerts' : 'SMS alerts';
+      setUpsellModal({ visible: true, feature: featureName });
+      return;
+    }
+    const newToggles = { ...settingsToggles, [key]: value };
+    setSettingsToggles(newToggles);
+    savePrefs(settingsModal.vehicle, newToggles);
+  };
+
+  const savePrefs = async (vehicle, toggles) => {
+    if (!vehicle) return;
+    await AsyncStorage.setItem(`prefs_${vehicle.id}`, JSON.stringify(toggles));
+    try {
+      await fetch(`${BACKEND}/api/v1/update-preferences`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          qr_token: vehicle.token,
+          push_enabled: toggles.push,
+          whatsapp_enabled: toggles.whatsapp,
+          call_enabled: toggles.call,
+          sms_enabled: toggles.sms,
+        }),
+      });
+    } catch (e) { console.log('Prefs save error:', e); }
+  };
+
+  const formatDate = (iso) => {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
   };
 
   const renderVehicle = ({ item }) => (
-    <View style={styles.card}>
+    <TouchableOpacity style={styles.card} onPress={() => openSettings(item)} activeOpacity={0.92}>
       {/* Top row */}
       <View style={styles.cardTop}>
         <View style={styles.plateWrap}>
@@ -136,25 +191,126 @@ export default function HomeScreen({ navigation }) {
           <Text style={styles.qrBtnText}>View QR</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity
-          style={styles.stickerBtn}
-          onPress={() => navigation.navigate('StickerDesign', { vehicle: item })}
-        >
-          <Text style={styles.stickerBtnText}>Design</Text>
-        </TouchableOpacity>
+        {DESIGN_ELIGIBLE.includes(item.vehicleType) && (
+          <TouchableOpacity
+            style={styles.stickerBtn}
+            onPress={() => navigation.navigate('StickerDesign', { vehicle: item })}
+          >
+            <Text style={styles.stickerBtnText}>Design</Text>
+          </TouchableOpacity>
+        )}
 
         <TouchableOpacity
           style={styles.deleteBtn}
-          onPress={() => deleteVehicle(item.id)}
+          onPress={() => confirmDelete(item.id, item.plate)}
         >
           <TrashIcon size={18} color="#555" />
         </TouchableOpacity>
       </View>
-    </View>
+    </TouchableOpacity>
   );
 
   return (
     <SafeAreaView style={styles.container}>
+      <CustomModal
+        visible={deleteModal.visible}
+        title="Remove Vehicle"
+        message={`Remove ${deleteModal.plate} from VahanPing? This cannot be undone.`}
+        buttons={[
+          { text: 'Cancel', onPress: () => setDeleteModal({ visible: false, vehicleId: null, plate: '' }) },
+          { text: 'Remove', style: 'destructive', onPress: executeDelete },
+        ]}
+        onClose={() => setDeleteModal({ visible: false, vehicleId: null, plate: '' })}
+      />
+
+      {/* Upsell Modal */}
+      <CustomModal
+        visible={upsellModal.visible}
+        title="Bundle Required"
+        message={`Purchase Bundle ₹299 to enable ${upsellModal.feature}.`}
+        buttons={[
+          { text: 'Maybe Later', onPress: () => setUpsellModal({ visible: false, feature: '' }) },
+          { text: 'View Bundle →', style: 'primary', onPress: () => { setUpsellModal({ visible: false, feature: '' }); setSettingsModal({ visible: false, vehicle: null }); navigation.navigate('Payment'); } },
+        ]}
+        onClose={() => setUpsellModal({ visible: false, feature: '' })}
+      />
+
+      {/* Vehicle Settings Modal */}
+      <Modal
+        transparent
+        animationType="slide"
+        visible={settingsModal.visible}
+        onRequestClose={() => setSettingsModal({ visible: false, vehicle: null })}
+      >
+        <View style={styles.settingsOverlay}>
+          <TouchableOpacity style={styles.settingsDismiss} activeOpacity={1} onPress={() => setSettingsModal({ visible: false, vehicle: null })} />
+          <View style={styles.settingsSheet}>
+            <View style={styles.settingsHandle} />
+
+            {/* Header */}
+            <View style={styles.settingsHeader}>
+              <View>
+                <Text style={styles.settingsPlate}>{settingsModal.vehicle?.plate}</Text>
+                <Text style={styles.settingsSubtitle}>Vehicle Settings</Text>
+              </View>
+              <TouchableOpacity style={styles.settingsCloseBtn} onPress={() => setSettingsModal({ visible: false, vehicle: null })}>
+                <Text style={styles.settingsCloseBtnText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {/* Info section */}
+              <Text style={styles.settingsSectionLabel}>Vehicle Info</Text>
+              <View style={styles.settingsInfoCard}>
+                {[
+                  { label: 'Phone', value: settingsModal.vehicle?.phone || '—' },
+                  { label: 'Color', value: settingsModal.vehicle?.color || '—' },
+                  { label: 'Type', value: settingsModal.vehicle?.vehicleType || '—' },
+                  { label: 'Registered', value: formatDate(settingsModal.vehicle?.registeredAt) },
+                ].map((row, i, arr) => (
+                  <View key={row.label} style={[styles.settingsInfoRow, i < arr.length - 1 && styles.settingsInfoRowBorder]}>
+                    <Text style={styles.settingsInfoLabel}>{row.label}</Text>
+                    <Text style={styles.settingsInfoValue}>{row.value}</Text>
+                  </View>
+                ))}
+              </View>
+
+              {/* Toggles section */}
+              <Text style={styles.settingsSectionLabel}>Notifications & Features</Text>
+              <View style={styles.settingsInfoCard}>
+                {[
+                  { key: 'push',     label: 'Push Notifications', sub: 'Free — instant in-app alerts',        paid: false },
+                  { key: 'whatsapp', label: 'WhatsApp Alerts',     sub: 'Bundle plan required',                paid: true  },
+                  { key: 'call',     label: 'Anonymous Call',      sub: 'Bundle plan required',                paid: true  },
+                  { key: 'sms',      label: 'SMS Alerts',          sub: 'Bundle plan required',                paid: true  },
+                ].map((item, i, arr) => (
+                  <View key={item.key} style={[styles.settingsToggleRow, i < arr.length - 1 && styles.settingsInfoRowBorder]}>
+                    <View style={styles.settingsToggleLeft}>
+                      <View>
+                        <View style={styles.settingsToggleLabelRow}>
+                          <Text style={styles.settingsToggleLabel}>{item.label}</Text>
+                          {!item.paid && <View style={styles.freeBadge}><Text style={styles.freeBadgeText}>FREE</Text></View>}
+                          {item.paid && !hasBundlePlan && <View style={styles.paidBadge}><Text style={styles.paidBadgeText}>BUNDLE</Text></View>}
+                        </View>
+                        <Text style={styles.settingsToggleSub}>{item.sub}</Text>
+                      </View>
+                    </View>
+                    <Switch
+                      value={settingsToggles[item.key]}
+                      onValueChange={(v) => handleToggle(item.key, v)}
+                      trackColor={{ false: '#E0E0E0', true: '#7C3AED' }}
+                      thumbColor={settingsToggles[item.key] ? '#fff' : '#f4f3f4'}
+                      ios_backgroundColor="#E0E0E0"
+                    />
+                  </View>
+                ))}
+              </View>
+
+              <View style={{ height: 30 }} />
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
       {/* Header */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
@@ -166,25 +322,27 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.headerSub}>Vehicle Protection</Text>
           </View>
         </View>
-        <View style={{ flexDirection: 'row', gap: 8 }}>
+        <View style={styles.headerBtnGroup}>
           <TouchableOpacity
-            style={styles.ordersBtn}
-            onPress={() => navigation.navigate('Orders')}
+            style={[styles.groupBtn, activeBtn === 'orders' && styles.groupBtnActive]}
+            onPress={() => { setActiveBtn('orders'); navigation.navigate('Orders'); }}
           >
-            <Text style={styles.ordersBtnText}>📦 Orders</Text>
+            <Text style={[styles.groupBtnText, activeBtn === 'orders' && styles.groupBtnTextActive]}>Orders</Text>
           </TouchableOpacity>
+          <View style={styles.groupBtnDivider} />
           <TouchableOpacity
-            style={styles.shopBtn}
-            onPress={() => require('react-native').Linking.openURL('https://www.vahanping.com/shop')}
+            style={[styles.groupBtn, activeBtn === 'shop' && styles.groupBtnActive]}
+            onPress={() => { setActiveBtn('shop'); require('react-native').Linking.openURL('https://www.vahanping.com/shop'); }}
           >
-            <Text style={styles.shopBtnText}>🏪 Shop</Text>
+            <Text style={[styles.groupBtnText, activeBtn === 'shop' && styles.groupBtnTextActive]}>Shop</Text>
           </TouchableOpacity>
+          <View style={styles.groupBtnDivider} />
           <TouchableOpacity
-            style={styles.upgradeBtn}
-            onPress={() => navigation.navigate('Payment')}
+            style={[styles.groupBtn, activeBtn === 'upgrade' && styles.groupBtnActive]}
+            onPress={() => { setActiveBtn('upgrade'); navigation.navigate('Payment'); }}
           >
-            <BoltIcon size={13} color="#C9A84C" />
-            <Text style={styles.upgradeBtnText}>Upgrade</Text>
+            <BoltIcon size={13} color={activeBtn === 'upgrade' ? '#fff' : '#C9A84C'} />
+            <Text style={[styles.groupBtnText, styles.groupBtnUpgradeText, activeBtn === 'upgrade' && styles.groupBtnTextActive]}>Upgrade</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -292,26 +450,40 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
     marginTop: 1,
   },
-  ordersBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1A1A1A', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1, borderColor: '#2A2A2A' },
-  shopBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#1A1A1A', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1, borderColor: '#C9A84C' },
-  shopBtnText: { fontSize: 12, fontWeight: '700', color: '#C9A84C' },
-  ordersBtnText: { fontSize: 12, fontWeight: '700', color: '#9D65F5' },
-  upgradeBtn: {
+  headerBtnGroup: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: '#0F0C00',
     borderWidth: 1,
-    borderColor: '#2A2200',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    borderColor: '#2A2A2A',
     borderRadius: 20,
+    backgroundColor: '#1A1A1A',
+    overflow: 'hidden',
   },
-  upgradeBtnText: {
+  groupBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
+  },
+  groupBtnActive: {
+    backgroundColor: '#7C3AED',
+  },
+  groupBtnDivider: {
+    width: 1,
+    height: 18,
+    backgroundColor: '#2A2A2A',
+  },
+  groupBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#9D9D9D',
+  },
+  groupBtnUpgradeText: {
     color: '#C9A84C',
-    fontWeight: '600',
-    fontSize: 13,
-    letterSpacing: 0.2,
+  },
+  groupBtnTextActive: {
+    color: '#FFFFFF',
   },
 
   // Stats bar
@@ -538,6 +710,32 @@ const styles = StyleSheet.create({
     fontSize: 13,
   },
 
+  // Settings Modal
+  settingsOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  settingsDismiss: { flex: 1 },
+  settingsSheet: { backgroundColor: '#FFFFFF', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: '85%', borderTopWidth: 1, borderColor: '#E0E0E0' },
+  settingsHandle: { width: 36, height: 4, backgroundColor: '#DDDDDD', borderRadius: 2, alignSelf: 'center', marginBottom: 20 },
+  settingsHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 },
+  settingsPlate: { fontSize: 22, fontWeight: '800', color: '#1A1A1A', letterSpacing: 2 },
+  settingsSubtitle: { fontSize: 12, color: '#999', marginTop: 2 },
+  settingsCloseBtn: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#F5F5F5', borderWidth: 1, borderColor: '#E0E0E0', alignItems: 'center', justifyContent: 'center' },
+  settingsCloseBtnText: { fontSize: 14, color: '#888', fontWeight: '700' },
+  settingsSectionLabel: { fontSize: 10, fontWeight: '700', color: '#AAAAAA', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10, marginTop: 4 },
+  settingsInfoCard: { backgroundColor: '#F8F8F8', borderRadius: 14, borderWidth: 1, borderColor: '#EEEEEE', marginBottom: 20, overflow: 'hidden' },
+  settingsInfoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 13 },
+  settingsInfoRowBorder: { borderBottomWidth: 1, borderBottomColor: '#EEEEEE' },
+  settingsInfoLabel: { fontSize: 13, color: '#888888', fontWeight: '500' },
+  settingsInfoValue: { fontSize: 13, color: '#1A1A1A', fontWeight: '600', maxWidth: '60%', textAlign: 'right' },
+  settingsToggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingVertical: 13 },
+  settingsToggleLeft: { flexDirection: 'row', alignItems: 'center', gap: 12, flex: 1 },
+  settingsToggleIcon: { fontSize: 20 },
+  settingsToggleLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  settingsToggleLabel: { fontSize: 14, color: '#1A1A1A', fontWeight: '600' },
+  settingsToggleSub: { fontSize: 11, color: '#AAAAAA', marginTop: 2 },
+  freeBadge: { backgroundColor: 'rgba(16,185,129,0.12)', borderWidth: 1, borderColor: 'rgba(16,185,129,0.3)', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 6 },
+  freeBadgeText: { fontSize: 9, fontWeight: '800', color: '#10B981', letterSpacing: 0.5 },
+  paidBadge: { backgroundColor: 'rgba(124,58,237,0.1)', borderWidth: 1, borderColor: 'rgba(124,58,237,0.25)', paddingHorizontal: 6, paddingVertical: 1, borderRadius: 6 },
+  paidBadgeText: { fontSize: 9, fontWeight: '800', color: '#7C3AED', letterSpacing: 0.5 },
 });
 
 

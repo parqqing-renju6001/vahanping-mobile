@@ -19,6 +19,7 @@ import OnboardingScreen from './screens/OnboardingScreen';
 import StickerDesignScreen from './screens/StickerDesignScreen';
 import PhoneAuthScreen from './screens/PhoneAuthScreen';
 import OrdersScreen from './screens/OrdersScreen';
+import ActivateStickerScreen from './screens/ActivateStickerScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -78,6 +79,13 @@ const AlertTabIcon = ({ color, size }) => (
   </Svg>
 );
 
+const StickerTabIcon = ({ color, size }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+    <Path d="M7 7h.01" stroke={color} strokeWidth="2.5" strokeLinecap="round"/>
+  </Svg>
+);
+
 function MainTabs() {
   const insets = useSafeAreaInsets();
   return (
@@ -99,6 +107,7 @@ function MainTabs() {
     >
       <Tab.Screen name="Home" component={HomeScreen} options={{ tabBarLabel: 'Vehicles', tabBarIcon: ({ color }) => <HomeTabIcon color={color} size={22} /> }} />
       <Tab.Screen name="Register" component={VehicleRegistrationScreen} options={{ tabBarLabel: 'Register', tabBarIcon: ({ color }) => <AddTabIcon color={color} size={22} /> }} />
+      <Tab.Screen name="Activate" component={ActivateStickerScreen} options={{ tabBarLabel: 'Activate', tabBarIcon: ({ color }) => <StickerTabIcon color={color} size={22} /> }} />
       <Tab.Screen name="Notifications" component={NotificationsScreen} options={{ tabBarLabel: 'Alerts', tabBarIcon: ({ color }) => <AlertTabIcon color={color} size={22} /> }} />
     </Tab.Navigator>
   );
@@ -245,6 +254,7 @@ export default function App() {
           <Stack.Screen name="Payment" component={PaymentScreen} />
           <Stack.Screen name="StickerDesign" component={StickerDesignScreen} />
           <Stack.Screen name="Orders" component={OrdersScreen} />
+          <Stack.Screen name="ActivateSticker" component={ActivateStickerScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </SafeAreaProvider>

@@ -9,14 +9,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const RAZORPAY_KEY = 'rzp_test_SUHS20b7ZKOzJ5';
 const BACKEND = 'https://api.vahanping.com';
 
-const INDIVIDUAL_PLANS = [
-  { id: 'whatsapp', icon: '💬', name: 'WhatsApp Alerts', price: 99,  description: 'Instant WhatsApp notification when someone scans your QR', highlight: 'Most Popular', needsAddress: false },
-  { id: 'call',     icon: '📞', name: 'Anonymous Call',  price: 199, description: 'Masked call so people reach you without knowing your number', highlight: null, needsAddress: false },
-  { id: 'sticker',  icon: '📦', name: 'QR Sticker',      price: 199, description: 'Premium weatherproof QR sticker delivered to your door', highlight: null, needsAddress: true },
-  { id: 'sms',      icon: '📩', name: 'SMS Alerts',      price: 199, description: 'Get SMS notifications when your vehicle is contacted', highlight: null, needsAddress: false },
-];
+const BUNDLE_PLAN  = { id: 'bundle',  name: 'Complete Bundle',  price: 299, needsAddress: true  };
+const STICKER_PLAN = { id: 'sticker', name: 'QR Sticker Only',  price: 199, needsAddress: true  };
 
-const BUNDLE = { id: 'bundle', name: 'Complete Protection Bundle', price: 399, needsAddress: true };
 const EMPTY_ADDRESS = { name: '', phone: '', line1: '', city: '', state: '', pincode: '' };
 
 export default function PaymentScreen({ navigation, route }) {
@@ -31,15 +26,14 @@ export default function PaymentScreen({ navigation, route }) {
   // Auto-open address modal if coming from sticker designer
   useEffect(() => {
     if (route?.params?.autoOpenPlan === 'sticker') {
-      const stickerPlan = INDIVIDUAL_PLANS.find(p => p.id === 'sticker');
-      if (stickerPlan) setTimeout(() => openAddressModal(stickerPlan), 300);
+      setTimeout(() => openAddressModal(STICKER_PLAN), 300);
     }
   }, []);
 
   const showAlert = (message) => setAlertModal({ visible: true, message });
   const openAddressModal = (plan) => { setAddress(EMPTY_ADDRESS); setAddressModal({ visible: true, plan }); };
   const closeAddressModal = () => setAddressModal({ visible: false, plan: null });
-  const handleBuy = (plan) => { if (plan.needsAddress) openAddressModal(plan); else handlePayment(plan); };
+  const handleBuy = (plan) => openAddressModal(plan);
 
   // Auto-populate city and state from pincode
   const handlePincodeChange = async (pin) => {
@@ -83,7 +77,7 @@ export default function PaymentScreen({ navigation, route }) {
         theme: { color: '#7C3AED' },
       };
       const data = await RazorpayCheckout.open(options);
-      if (deliveryAddress && (plan.id === 'sticker' || plan.id === 'bundle')) {
+      if (deliveryAddress) {
         try {
           await fetch(`${BACKEND}/api/v1/orders`, {
             method: 'POST',
@@ -136,7 +130,6 @@ export default function PaymentScreen({ navigation, route }) {
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <View style={[styles.modalIconWrap, { backgroundColor: 'rgba(245,158,11,0.15)', borderColor: '#F59E0B' }]}>
-              <Text style={styles.modalIcon}>⚠️</Text>
             </View>
             <Text style={styles.modalTitle}>Required</Text>
             <Text style={styles.modalMsg}>{alertModal.message}</Text>
@@ -152,7 +145,6 @@ export default function PaymentScreen({ navigation, route }) {
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <View style={[styles.modalIconWrap, { backgroundColor: 'rgba(16,185,129,0.15)', borderColor: '#10B981' }]}>
-              <Text style={styles.modalIcon}>✅</Text>
             </View>
             <Text style={styles.modalTitle}>Payment Successful!</Text>
             <Text style={styles.modalMsg}>{successModal.planName} has been activated!</Text>
@@ -174,7 +166,6 @@ export default function PaymentScreen({ navigation, route }) {
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
             <View style={[styles.modalIconWrap, { backgroundColor: 'rgba(239,68,68,0.15)', borderColor: '#EF4444' }]}>
-              <Text style={styles.modalIcon}>❌</Text>
             </View>
             <Text style={styles.modalTitle}>Payment Failed</Text>
             <Text style={styles.modalMsg}>Something went wrong. Please try again.</Text>
@@ -200,9 +191,9 @@ export default function PaymentScreen({ navigation, route }) {
             <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
               {[
-                { key: 'name',  label: 'Full Name',     placeholder: 'Your Full Name',             keyboard: 'default',   max: undefined },
-                { key: 'phone', label: 'Phone Number',  placeholder: '9876543210',            keyboard: 'phone-pad', max: 10 },
-                { key: 'line1', label: 'Address',       placeholder: 'House No, Street, Area', keyboard: 'default',   max: undefined },
+                { key: 'name',  label: 'Full Name',    placeholder: 'Your Full Name',             keyboard: 'default',   max: undefined },
+                { key: 'phone', label: 'Phone Number', placeholder: '9876543210',                 keyboard: 'phone-pad', max: 10 },
+                { key: 'line1', label: 'Address',      placeholder: 'House No, Street, Area',     keyboard: 'default',   max: undefined },
               ].map(field => (
                 <View key={field.key} style={styles.addressField}>
                   <Text style={styles.addressFieldLabel}>{field.label}</Text>
@@ -237,13 +228,13 @@ export default function PaymentScreen({ navigation, route }) {
 
               {/* City — auto-filled */}
               <View style={styles.addressField}>
-                <Text style={styles.addressFieldLabel}>City / District {address.city ? '✅' : ''}</Text>
+                <Text style={styles.addressFieldLabel}>City / District</Text>
                 <TextInput style={styles.addressInput} placeholder="Thrissur" placeholderTextColor="#333" value={address.city} onChangeText={t => setAddress(p => ({ ...p, city: t }))} />
               </View>
 
               {/* State — auto-filled */}
               <View style={styles.addressField}>
-                <Text style={styles.addressFieldLabel}>State {address.state ? '✅' : ''}</Text>
+                <Text style={styles.addressFieldLabel}>State</Text>
                 <TextInput style={styles.addressInput} placeholder="Kerala" placeholderTextColor="#333" value={address.state} onChangeText={t => setAddress(p => ({ ...p, state: t }))} />
               </View>
 
@@ -281,66 +272,68 @@ export default function PaymentScreen({ navigation, route }) {
           <Text style={styles.headerSub}>Protect your vehicle with premium features</Text>
         </View>
 
+        {/* Free tier note */}
+        <View style={styles.freeNote}>
+          <Text style={styles.freeNoteText}>Push notifications are <Text style={styles.freeNoteBold}>free</Text> for all users — no purchase needed.</Text>
+        </View>
+
+        {/* Bundle Plan */}
         <View style={styles.bundleCard}>
-          <View style={styles.bundleBadge}><Text style={styles.bundleBadgeText}>⚡ BEST VALUE</Text></View>
-          <Text style={styles.bundleTitle}>Complete Protection Bundle</Text>
-          <Text style={styles.bundleDesc}>WhatsApp Alerts + Anonymous Call + QR Sticker + SMS Alerts</Text>
+          <View style={styles.bundleBadge}><Text style={styles.bundleBadgeText}>BEST VALUE</Text></View>
+          <Text style={styles.bundleTitle}>Complete Bundle</Text>
+          <Text style={styles.bundleDesc}>Complete protection — stay reachable via WhatsApp, SMS, or call when it matters.</Text>
           <View style={styles.bundleFeatures}>
-            {['💬 WhatsApp Alerts', '📞 Anonymous Call', '📦 QR Sticker', '📩 SMS Alerts'].map(f => (
-              <View key={f} style={styles.bundleFeatureRow}>
+            {[
+              'WhatsApp Alerts — instant message on scan',
+              'SMS Alerts — text message on scan',
+              'Anonymous Call — masked caller ID',
+              'QR Sticker — weatherproof, delivered free',
+            ].map(text => (
+              <View key={text} style={styles.bundleFeatureRow}>
                 <View style={styles.checkCircle}><Text style={styles.checkText}>✓</Text></View>
-                <Text style={styles.bundleFeatureText}>{f}</Text>
+                <Text style={styles.bundleFeatureText}>{text}</Text>
               </View>
             ))}
           </View>
           <View style={styles.bundlePriceRow}>
             <View>
-              <Text style={styles.originalPrice}>₹796</Text>
-              <Text style={styles.saveText}>Save ₹397 (50% off)</Text>
+              <Text style={styles.originalPrice}>₹597</Text>
+              <Text style={styles.saveText}>Save ₹298 (50% off)</Text>
             </View>
-            <View style={styles.bundlePriceBadge}><Text style={styles.bundlePrice}>₹399</Text></View>
+            <View style={styles.bundlePriceBadge}><Text style={styles.bundlePrice}>₹299</Text></View>
           </View>
-          <TouchableOpacity style={styles.bundleBtn} onPress={() => handleBuy(BUNDLE)} disabled={loading}>
-            <Text style={styles.bundleBtnText}>Get Bundle — ₹399 →</Text>
+          <TouchableOpacity style={styles.bundleBtn} onPress={() => handleBuy(BUNDLE_PLAN)} disabled={loading}>
+            <Text style={styles.bundleBtnText}>Get Bundle — ₹299 →</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.dividerRow}>
           <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>or choose individually</Text>
+          <Text style={styles.dividerText}>or sticker only</Text>
           <View style={styles.dividerLine} />
         </View>
 
-        {INDIVIDUAL_PLANS.map(plan => (
-          <View key={plan.id} style={styles.planCard}>
-            {plan.highlight && <View style={styles.highlightBadge}><Text style={styles.highlightText}>{plan.highlight}</Text></View>}
-            <View style={styles.planTop}>
-              <View style={styles.planIconWrap}><Text style={styles.planIcon}>{plan.icon}</Text></View>
-              <View style={styles.planInfo}>
-                <Text style={styles.planName}>{plan.name}</Text>
-                <Text style={styles.planDesc}>{plan.description}</Text>
-              </View>
-              <Text style={styles.planPrice}>₹{plan.price}</Text>
-            </View>
-            <TouchableOpacity style={styles.buyBtn} onPress={() => handleBuy(plan)} disabled={loading}>
-              <Text style={styles.buyBtnText}>{plan.needsAddress ? 'Order Now →' : 'Buy Now →'}</Text>
-            </TouchableOpacity>
-          </View>
-        ))}
-
-        <View style={[styles.planCard, styles.comingSoonCard]}>
-          <View style={styles.comingSoonBadge}><Text style={styles.comingSoonBadgeText}>🔜 COMING SOON</Text></View>
+        {/* Sticker-only Plan */}
+        <View style={styles.planCard}>
           <View style={styles.planTop}>
-            <View style={[styles.planIconWrap, styles.planIconWrapDim]}><Text style={styles.planIcon}>🔔</Text></View>
             <View style={styles.planInfo}>
-              <Text style={[styles.planName, styles.dimText]}>Push Notifications</Text>
-              <Text style={styles.planDesc}>In-app push alerts — coming soon, will be free!</Text>
+              <Text style={styles.planName}>QR Sticker Only</Text>
+              <Text style={styles.planDesc}>Premium weatherproof QR sticker delivered to your door. No calls or WhatsApp included.</Text>
             </View>
-            <Text style={[styles.planPrice, styles.dimText]}>Free</Text>
+            <Text style={styles.planPrice}>₹199</Text>
           </View>
+          <View style={styles.stickerFeatureRow}>
+            <Text style={styles.stickerFeatureIncluded}>QR Sticker delivery</Text>
+            <Text style={styles.stickerFeatureExcluded}>No WhatsApp Alerts</Text>
+            <Text style={styles.stickerFeatureExcluded}>No Anonymous Call</Text>
+            <Text style={styles.stickerFeatureExcluded}>No SMS Alerts</Text>
+          </View>
+          <TouchableOpacity style={styles.buyBtn} onPress={() => handleBuy(STICKER_PLAN)} disabled={loading}>
+            <Text style={styles.buyBtnText}>Order Sticker — ₹199 →</Text>
+          </TouchableOpacity>
         </View>
 
-        <View style={styles.secureNote}><Text style={styles.secureText}>🔒 Secured by Razorpay · 100% Safe</Text></View>
+        <View style={styles.secureNote}><Text style={styles.secureText}>Secured by Razorpay · 100% Safe</Text></View>
         <View style={{ height: 40 }} />
       </ScrollView>
     </SafeAreaView>
@@ -384,19 +377,24 @@ const styles = StyleSheet.create({
   addressPayBtnText: { color: '#FFF', fontSize: 15, fontWeight: '700' },
   addressCancelBtn: { backgroundColor: '#0E0E0E', borderRadius: 12, paddingVertical: 14, alignItems: 'center', borderWidth: 1, borderColor: '#1A1A1A' },
   addressCancelText: { color: '#555', fontSize: 14, fontWeight: '600' },
-  header: { marginBottom: 24, paddingTop: 10 },
+  header: { marginBottom: 20, paddingTop: 10 },
   headerTitle: { fontSize: 28, fontWeight: '800', color: '#FFF', letterSpacing: -0.5 },
   headerSub: { color: '#666', fontSize: 14, marginTop: 4 },
+  freeNote: { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: 'rgba(16,185,129,0.08)', borderWidth: 1, borderColor: 'rgba(16,185,129,0.2)', borderRadius: 12, padding: 14, marginBottom: 24 },
+  freeNoteIcon: { fontSize: 18 },
+  freeNoteText: { color: '#666', fontSize: 13, flex: 1, lineHeight: 19 },
+  freeNoteBold: { color: '#10B981', fontWeight: '700' },
   bundleCard: { backgroundColor: '#12121A', borderRadius: 20, padding: 22, marginBottom: 24, borderWidth: 1.5, borderColor: '#7C3AED' },
   bundleBadge: { backgroundColor: '#7C3AED', alignSelf: 'flex-start', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20, marginBottom: 14 },
   bundleBadgeText: { color: '#FFF', fontSize: 11, fontWeight: '800', letterSpacing: 1 },
   bundleTitle: { color: '#FFF', fontSize: 20, fontWeight: '800', marginBottom: 6 },
   bundleDesc: { color: '#888', fontSize: 13, lineHeight: 20, marginBottom: 16 },
   bundleFeatures: { marginBottom: 20 },
-  bundleFeatureRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
-  checkCircle: { width: 20, height: 20, borderRadius: 10, backgroundColor: 'rgba(124,58,237,0.2)', borderWidth: 1, borderColor: '#7C3AED', alignItems: 'center', justifyContent: 'center', marginRight: 10 },
+  bundleFeatureRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 10 },
+  checkCircle: { width: 20, height: 20, borderRadius: 10, backgroundColor: 'rgba(124,58,237,0.2)', borderWidth: 1, borderColor: '#7C3AED', alignItems: 'center', justifyContent: 'center', marginRight: 10, marginTop: 1, flexShrink: 0 },
   checkText: { color: '#9D65F5', fontSize: 11, fontWeight: '800' },
-  bundleFeatureText: { color: '#CCC', fontSize: 14 },
+  bundleFeatureText: { color: '#CCC', fontSize: 14, flex: 1, lineHeight: 20 },
+  bundleFeatureIcon: { fontSize: 14 },
   bundlePriceRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18 },
   originalPrice: { color: '#555', fontSize: 16, textDecorationLine: 'line-through' },
   saveText: { color: '#9D65F5', fontSize: 12, marginTop: 2, fontWeight: '600' },
@@ -408,8 +406,6 @@ const styles = StyleSheet.create({
   dividerLine: { flex: 1, height: 1, backgroundColor: '#22223A' },
   dividerText: { color: '#555', fontSize: 12, marginHorizontal: 12 },
   planCard: { backgroundColor: '#12121A', borderRadius: 16, padding: 18, marginBottom: 14, borderWidth: 1, borderColor: '#22223A' },
-  highlightBadge: { backgroundColor: 'rgba(124,58,237,0.15)', borderWidth: 1, borderColor: 'rgba(124,58,237,0.3)', alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20, marginBottom: 12 },
-  highlightText: { color: '#9D65F5', fontSize: 10, fontWeight: '700' },
   planTop: { flexDirection: 'row', alignItems: 'center', marginBottom: 14 },
   planIconWrap: { width: 44, height: 44, borderRadius: 12, backgroundColor: 'rgba(124,58,237,0.15)', borderWidth: 1, borderColor: 'rgba(124,58,237,0.3)', alignItems: 'center', justifyContent: 'center', marginRight: 14 },
   planIcon: { fontSize: 22 },
@@ -417,13 +413,11 @@ const styles = StyleSheet.create({
   planName: { color: '#FFF', fontSize: 15, fontWeight: '700', marginBottom: 3 },
   planDesc: { color: '#888', fontSize: 12, lineHeight: 18 },
   planPrice: { color: '#9D65F5', fontSize: 20, fontWeight: '900', marginLeft: 8 },
+  stickerFeatureRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 },
+  stickerFeatureIncluded: { color: '#9D65F5', fontSize: 12, fontWeight: '600' },
+  stickerFeatureExcluded: { color: '#444', fontSize: 12 },
   buyBtn: { backgroundColor: 'rgba(124,58,237,0.15)', borderWidth: 1, borderColor: 'rgba(124,58,237,0.4)', borderRadius: 12, paddingVertical: 12, alignItems: 'center' },
   buyBtnText: { color: '#9D65F5', fontWeight: '700', fontSize: 14 },
-  comingSoonCard: { borderColor: '#22223A', opacity: 0.7 },
-  comingSoonBadge: { backgroundColor: 'rgba(255,255,255,0.05)', alignSelf: 'flex-start', paddingHorizontal: 10, paddingVertical: 3, borderRadius: 20, marginBottom: 12 },
-  comingSoonBadgeText: { color: '#555', fontSize: 10, fontWeight: '700' },
-  planIconWrapDim: { backgroundColor: 'rgba(255,255,255,0.05)', borderColor: '#333' },
-  dimText: { color: '#555' },
   secureNote: { alignItems: 'center', marginTop: 8 },
   secureText: { color: '#444', fontSize: 13 },
 });

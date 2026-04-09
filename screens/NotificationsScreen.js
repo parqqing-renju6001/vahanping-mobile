@@ -95,7 +95,6 @@ export default function NotificationsScreen() {
       {notifications.length === 0 ? (
         <View style={styles.emptyState}>
           <View style={styles.emptyIconWrap}>
-            <Text style={styles.emptyIcon}>🔔</Text>
           </View>
           <Text style={styles.emptyTitle}>No alerts yet</Text>
           <Text style={styles.emptyText}>

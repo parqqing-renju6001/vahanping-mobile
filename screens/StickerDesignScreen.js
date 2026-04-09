@@ -25,10 +25,10 @@
   const TEMPLATES = [
     { id: 'blackgold', label: 'Black Gold',  image: require('../assets/sticker_blackgold.jpg'),  textColor: '#C9A84C', qrBorder: '#C9A84C' },
     { id: 'bluegold',  label: 'Blue Gold',   image: require('../assets/sticker_bluegold.jpg'),   textColor: '#C9A84C', qrBorder: '#4A90D9' },
-    { id: 'greengold', label: 'Green Gold',  image: require('../assets/sticker_greengold.jpg'),  textColor: '#C9A84C', qrBorder: '#2D7A3A' },
-    { id: 'pinggold',  label: 'Rose Gold',   image: require('../assets/sticker_pinggold.jpg'),   textColor: '#C9A84C', qrBorder: '#C9A484' },
-    { id: 'puregold',  label: 'Pure Gold',   image: require('../assets/sticker_puregold.jpg'),   textColor: '#C9A84C', qrBorder: '#C9A84C' },
-    { id: 'redgold',   label: 'Red Gold',    image: require('../assets/sticker_redgold.jpg'),    textColor: '#C9A84C', qrBorder: '#8B1A1A' },
+    { id: 'greengold', label: 'Green Gold',  image: require('../assets/sticker_greengold.jpg'),  textColor: '#C9A84C', qrBorder: '#2D7A3A', profTextColor: '#000000' },
+    { id: 'pinggold',  label: 'Rose Gold',   image: require('../assets/sticker_pinggold.jpg'),   textColor: '#C9A84C', qrBorder: '#C9A484', profTextColor: '#000000' },
+    { id: 'puregold',  label: 'Pure Gold',   image: require('../assets/sticker_puregold.jpg'),   textColor: '#C9A84C', qrBorder: '#C9A84C', profTextColor: '#000000' },
+    { id: 'redgold',   label: 'Red Gold',    image: require('../assets/sticker_redgold.jpg'),    textColor: '#C9A84C', qrBorder: '#8B1A1A', profTextColor: '#000000' },
   ];
 
   const STICKER_SIZE = 300;
@@ -64,7 +64,7 @@
   //   Middle ~55% = dark QR rectangle area
   //   Bottom ~25% = VahanPing branding strip
   const CircleBadgeSticker = ({ label, template, qrUrl, hasImage, professionImage }) => {
-    const { image, qrBorder } = template;
+    const { image, qrBorder, profTextColor } = template;
     const SIZE = STICKER_SIZE; // square
 
     // QR area sits in the middle dark rectangle
@@ -103,7 +103,7 @@
           )}
           {label ? (
             <Text style={{
-              color: qrBorder,
+              color: profTextColor || qrBorder,
               fontSize: 13,
               fontWeight: '900',
               letterSpacing: 2,
@@ -168,14 +168,14 @@
         setSaving(true);
         const { status } = await MediaLibrary.requestPermissionsAsync();
         if (status !== 'granted') {
-          showModal('⚠️', 'Permission Needed', 'Please allow access to save images.');
+          showModal('', 'Permission Needed', 'Please allow access to save images.');
           return;
         }
         const uri = await viewShotRef.current.capture();
         await MediaLibrary.saveToLibraryAsync(uri);
-        showModal('✅', 'Saved!', 'Sticker saved to your gallery.');
+        showModal('', 'Saved!', 'Sticker saved to your gallery.');
       } catch (e) {
-        showModal('❌', 'Error', 'Could not save. Please try again.');
+        showModal('', 'Error', 'Could not save. Please try again.');
       } finally {
         setSaving(false);
       }

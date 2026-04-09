@@ -147,7 +147,6 @@ export default function OrdersScreen({ navigation }) {
 
   const renderError = () => (
     <View style={s.emptyWrap}>
-      <Text style={{ fontSize: 40, marginBottom: 12 }}>⚠️</Text>
       <Text style={s.emptyTitle}>
         {error === 'no_phone' ? 'Not Logged In' : 'Could Not Load Orders'}
       </Text>

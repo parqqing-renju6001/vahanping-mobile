@@ -94,7 +94,7 @@ export default function QRCodeScreen({ route, navigation }) {
         title: `VahanPing QR — ${vehicle.plate}`,
       });
     } catch (e) {
-      showModal('❌', 'Share Failed', e.message, [{ text: 'OK', style: 'primary', onPress: closeModal }]);
+      showModal('', 'Share Failed', e.message, [{ text: 'OK', style: 'primary', onPress: closeModal }]);
     }
   };
 
@@ -102,18 +102,18 @@ export default function QRCodeScreen({ route, navigation }) {
     try {
       const Clipboard = require('@react-native-clipboard/clipboard').default;
       Clipboard.setString(scanUrl);
-      showModal('✅', 'Copied', 'Scan link copied to clipboard', [{ text: 'OK', style: 'primary', onPress: closeModal }]);
+      showModal('', 'Copied', 'Scan link copied to clipboard', [{ text: 'OK', style: 'primary', onPress: closeModal }]);
     } catch {
-      showModal('🔗', 'Scan URL', scanUrl, [{ text: 'OK', style: 'primary', onPress: closeModal }]);
+      showModal('', 'Scan URL', scanUrl, [{ text: 'OK', style: 'primary', onPress: closeModal }]);
     }
   };
 
   const handleOrderSticker = async () => {
-    if (!address.name.trim()) return showModal('⚠️', 'Required', 'Please enter your name', [{ text: 'OK', style: 'primary', onPress: closeModal }]);
-    if (!address.phone.trim()) return showModal('⚠️', 'Required', 'Please enter your phone', [{ text: 'OK', style: 'primary', onPress: closeModal }]);
-    if (!address.line1.trim()) return showModal('⚠️', 'Required', 'Please enter your address', [{ text: 'OK', style: 'primary', onPress: closeModal }]);
-    if (!address.city.trim()) return showModal('⚠️', 'Required', 'Please enter your city', [{ text: 'OK', style: 'primary', onPress: closeModal }]);
-    if (!address.pincode.trim() || address.pincode.length !== 6) return showModal('⚠️', 'Required', 'Please enter a valid 6-digit pincode', [{ text: 'OK', style: 'primary', onPress: closeModal }]);
+    if (!address.name.trim()) return showModal('', 'Required', 'Please enter your name', [{ text: 'OK', style: 'primary', onPress: closeModal }]);
+    if (!address.phone.trim()) return showModal('', 'Required', 'Please enter your phone', [{ text: 'OK', style: 'primary', onPress: closeModal }]);
+    if (!address.line1.trim()) return showModal('', 'Required', 'Please enter your address', [{ text: 'OK', style: 'primary', onPress: closeModal }]);
+    if (!address.city.trim()) return showModal('', 'Required', 'Please enter your city', [{ text: 'OK', style: 'primary', onPress: closeModal }]);
+    if (!address.pincode.trim() || address.pincode.length !== 6) return showModal('', 'Required', 'Please enter a valid 6-digit pincode', [{ text: 'OK', style: 'primary', onPress: closeModal }]);
 
     setOrderLoading(true);
     try {
@@ -131,12 +131,12 @@ export default function QRCodeScreen({ route, navigation }) {
       if (data.success) {
         setShowOrderModal(false);
         setAddress({ name: '', phone: '', line1: '', city: '', state: '', pincode: '' });
-        showModal('🎉', 'Order Placed', `Your QR sticker will be delivered to ${address.city} within 5–7 business days.`, [{ text: 'Done', style: 'primary', onPress: closeModal }]);
+        showModal('', 'Order Placed', `Your QR sticker will be delivered to ${address.city} within 5–7 business days.`, [{ text: 'Done', style: 'primary', onPress: closeModal }]);
       } else {
-        showModal('❌', 'Error', data.error || 'Something went wrong', [{ text: 'OK', style: 'primary', onPress: closeModal }]);
+        showModal('', 'Error', data.error || 'Something went wrong', [{ text: 'OK', style: 'primary', onPress: closeModal }]);
       }
     } catch {
-      showModal('❌', 'Error', 'Failed to place order. Please try again.', [{ text: 'OK', style: 'primary', onPress: closeModal }]);
+      showModal('', 'Error', 'Failed to place order. Please try again.', [{ text: 'OK', style: 'primary', onPress: closeModal }]);
     } finally { setOrderLoading(false); }
   };
 

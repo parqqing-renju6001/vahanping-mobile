@@ -4,12 +4,13 @@ import {
   StyleSheet, SafeAreaView, ScrollView,
   ActivityIndicator, KeyboardAvoidingView, Platform
 } from 'react-native';
-import Svg, { Path, Circle, Line, Polyline } from 'react-native-svg';
+import Svg, { Path, Circle, Line, Polyline, Polygon } from 'react-native-svg';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CustomModal from './CustomModal';
 
 const BACKEND = 'https://api.vahanping.com';
 const COLORS = ['White', 'Black', 'Silver', 'Red', 'Blue', 'Grey', 'Green', 'Yellow', 'Orange', 'Other'];
+const VEHICLE_TYPES = ['Car', 'Bike', 'Scooter', 'Van', 'Truck', 'Auto Rickshaw', 'Bus', 'Other'];
 
 const CarIcon = ({ size = 20, color = '#555' }) => (
   <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
@@ -62,6 +63,21 @@ const CheckIcon = ({ size = 12, color = '#9D65F5' }) => (
   </Svg>
 );
 
+const TruckIcon = ({ size = 20, color = '#555' }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none">
+    <Path d="M1 3h15v13H1zM16 8h4l3 3v5h-7V8z" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+    <Circle cx="5.5" cy="18.5" r="2.5" stroke={color} strokeWidth="1.5"/>
+    <Circle cx="18.5" cy="18.5" r="2.5" stroke={color} strokeWidth="1.5"/>
+  </Svg>
+);
+
+const ChevronDownIcon = ({ size = 18, color = '#999', rotated = false }) => (
+  <Svg width={size} height={size} viewBox="0 0 24 24" fill="none"
+    style={rotated ? { transform: [{ rotate: '180deg' }] } : {}}>
+    <Path d="M6 9l6 6 6-6" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+  </Svg>
+);
+
 function generateId() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
     const r = Math.random() * 16 | 0;
@@ -73,6 +89,8 @@ export default function VehicleRegistrationScreen({ navigation }) {
   const [plate, setPlate] = useState('');
   const [nickname, setNickname] = useState('');
   const [model, setModel] = useState('');
+  const [vehicleType, setVehicleType] = useState('');
+  const [typeOpen, setTypeOpen] = useState(false);
   const [color, setColor] = useState('');
   const [phone, setPhone] = useState('');
   const [callEnabled, setCallEnabled] = useState(false);
@@ -84,10 +102,11 @@ export default function VehicleRegistrationScreen({ navigation }) {
   const closeModal = () => setModal(m => ({ ...m, visible: false }));
 
   const handleRegister = async () => {
-    if (!plate.trim() || plate.trim().length < 4) return showModal('⚠️', 'Required', 'Please enter a valid license plate (min 4 characters).', [{ text: 'OK', style: 'primary', onPress: closeModal }]);
-    if (!phone.trim()) return showModal('⚠️', 'Required', 'Please enter your phone number for alerts.', [{ text: 'OK', style: 'primary', onPress: closeModal }]);
-    if (phone.length !== 10) return showModal('⚠️', 'Invalid', 'Please enter a valid 10 digit phone number.', [{ text: 'OK', style: 'primary', onPress: closeModal }]);
-    if (!color) return showModal('⚠️', 'Required', 'Please select your vehicle color.', [{ text: 'OK', style: 'primary', onPress: closeModal }]);
+    if (!plate.trim() || plate.trim().length < 4) return showModal('', 'Required', 'Please enter a valid license plate (min 4 characters).', [{ text: 'OK', style: 'primary', onPress: closeModal }]);
+    if (!vehicleType) return showModal('', 'Required', 'Please select your vehicle type.', [{ text: 'OK', style: 'primary', onPress: closeModal }]);
+    if (!phone.trim()) return showModal('', 'Required', 'Please enter your phone number for alerts.', [{ text: 'OK', style: 'primary', onPress: closeModal }]);
+    if (phone.length !== 10) return showModal('', 'Invalid', 'Please enter a valid 10 digit phone number.', [{ text: 'OK', style: 'primary', onPress: closeModal }]);
+    if (!color) return showModal('', 'Required', 'Please select your vehicle color.', [{ text: 'OK', style: 'primary', onPress: closeModal }]);
 
     setLoading(true);
     try {
@@ -98,6 +117,7 @@ export default function VehicleRegistrationScreen({ navigation }) {
         plate: plate.trim().toUpperCase(),
         nickname: nickname.trim() || plate.trim().toUpperCase(),
         model: model.trim() || 'Vehicle',
+        vehicleType,
         color,
         phone: fullPhone,
         call_enabled: callEnabled,
@@ -110,9 +130,9 @@ export default function VehicleRegistrationScreen({ navigation }) {
       const existing = stored ? JSON.parse(stored) : [];
       await AsyncStorage.setItem('vehicles', JSON.stringify([...existing, newVehicle]));
 
-      setPlate(''); setNickname(''); setModel(''); setColor(''); setPhone(''); setCallEnabled(false);
+      setPlate(''); setNickname(''); setModel(''); setVehicleType(''); setColor(''); setPhone(''); setCallEnabled(false);
 
-      showModal('🎉', 'Vehicle Registered!', `${newVehicle.plate} is now protected by VahanPing.`, [
+      showModal('', 'Vehicle Registered!', `${newVehicle.plate} is now protected by VahanPing.`, [
         { text: 'View QR Code', style: 'primary', onPress: () => { closeModal(); navigation.navigate('QRCode', { vehicle: newVehicle }); } },
         { text: 'Go Home', onPress: () => { closeModal(); navigation.navigate('Home'); } },
       ]);
@@ -124,6 +144,7 @@ export default function VehicleRegistrationScreen({ navigation }) {
         body: JSON.stringify({
           plate: newVehicle.plate,
           model: newVehicle.model,
+          vehicle_type: vehicleType,
           color,
           phone: fullPhone,
           call_enabled: callEnabled,
@@ -152,7 +173,7 @@ export default function VehicleRegistrationScreen({ navigation }) {
       }).catch(() => {});
 
     } catch (e) {
-      showModal('❌', 'Error', 'Something went wrong. Please try again.', [
+      showModal('', 'Error', 'Something went wrong. Please try again.', [
         { text: 'OK', style: 'primary', onPress: closeModal },
       ]);
     } finally {
@@ -219,6 +240,45 @@ export default function VehicleRegistrationScreen({ navigation }) {
               onFocus={() => setFocusedField('model')}
               onBlur={() => setFocusedField('')}
             />
+          </View>
+
+          <View style={s.section}>
+            <View style={s.sectionHeader}>
+              <TruckIcon size={15} color="#555" />
+              <Text style={s.sectionLabel}>Vehicle Type</Text>
+              <Text style={s.required}>Required</Text>
+            </View>
+            <TouchableOpacity
+              style={[s.dropdownTrigger, typeOpen && s.dropdownTriggerOpen, vehicleType && s.dropdownTriggerSelected]}
+              onPress={() => setTypeOpen(o => !o)}
+              activeOpacity={0.7}
+            >
+              <Text style={[s.dropdownTriggerText, vehicleType && s.dropdownTriggerTextSelected]}>
+                {vehicleType || 'Select vehicle type'}
+              </Text>
+              <ChevronDownIcon size={18} color={vehicleType ? '#7C3AED' : '#AAAAAA'} rotated={typeOpen} />
+            </TouchableOpacity>
+            {typeOpen && (
+              <View style={s.dropdownList}>
+                {VEHICLE_TYPES.map((type, index) => (
+                  <TouchableOpacity
+                    key={type}
+                    style={[
+                      s.dropdownItem,
+                      vehicleType === type && s.dropdownItemActive,
+                      index === VEHICLE_TYPES.length - 1 && s.dropdownItemLast,
+                    ]}
+                    onPress={() => { setVehicleType(type); setTypeOpen(false); }}
+                    activeOpacity={0.6}
+                  >
+                    <Text style={[s.dropdownItemText, vehicleType === type && s.dropdownItemTextActive]}>
+                      {type}
+                    </Text>
+                    {vehicleType === type && <CheckIcon size={13} color="#7C3AED" />}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
           </View>
 
           <View style={s.section}>
@@ -328,4 +388,66 @@ const s = StyleSheet.create({
   submitBtn: { backgroundColor: '#7C3AED', borderRadius: 12, paddingVertical: 16, alignItems: 'center', marginTop: 8 },
   submitBtnDisabled: { opacity: 0.5 },
   submitBtnText: { color: '#FFFFFF', fontSize: 16, fontWeight: '700', letterSpacing: 0.2 },
+
+  // Vehicle type dropdown
+  dropdownTrigger: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: '#F5F5F5',
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+  },
+  dropdownTriggerOpen: {
+    borderColor: '#7C3AED',
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+  },
+  dropdownTriggerSelected: {
+    borderColor: '#7C3AED',
+    backgroundColor: 'rgba(124,58,237,0.04)',
+  },
+  dropdownTriggerText: {
+    fontSize: 14,
+    color: '#AAAAAA',
+  },
+  dropdownTriggerTextSelected: {
+    color: '#1A1A1A',
+    fontWeight: '600',
+  },
+  dropdownList: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderTopWidth: 0,
+    borderColor: '#7C3AED',
+    borderBottomLeftRadius: 12,
+    borderBottomRightRadius: 12,
+    overflow: 'hidden',
+  },
+  dropdownItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F0F0F0',
+  },
+  dropdownItemLast: {
+    borderBottomWidth: 0,
+  },
+  dropdownItemActive: {
+    backgroundColor: 'rgba(124,58,237,0.06)',
+  },
+  dropdownItemText: {
+    fontSize: 14,
+    color: '#555555',
+  },
+  dropdownItemTextActive: {
+    color: '#7C3AED',
+    fontWeight: '600',
+  },
 });
