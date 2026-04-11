@@ -192,6 +192,17 @@ export default function ActivateStickerScreen({ navigation }) {
         }).catch(() => {});
       }
 
+      // Reset all form state before navigating so the screen is fresh if revisited
+      setToken('');
+      setTokenChecked(false);
+      setTokenError('');
+      setPlate('');
+      setModel('');
+      setVehicleType('');
+      setTypeOpen(false);
+      setColor('');
+      setPhone('');
+
       navigation.navigate('Home');
     } catch {
       showModal('', 'Error', 'Something went wrong. Please try again.', [{ text: 'OK', style: 'primary', onPress: closeModal }]);
@@ -241,7 +252,7 @@ export default function ActivateStickerScreen({ navigation }) {
               <View style={s.tokenRow}>
                 <TextInput
                   style={[s.tokenInput, focusedField === 'token' && s.inputFocused, tokenChecked && s.inputVerified]}
-                  placeholder="e.g. a1b2c3d4-e5f6-..."
+                  placeholder="e.g. VP-A3X9K2"
                   placeholderTextColor="#AAAAAA"
                   value={token}
                   onChangeText={t => { setToken(t); setTokenChecked(false); setTokenError(''); }}

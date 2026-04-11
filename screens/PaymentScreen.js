@@ -66,17 +66,34 @@ export default function PaymentScreen({ navigation, route }) {
   const handlePayment = async (plan, deliveryAddress = null) => {
     setLoading(true);
     try {
+      // Create a Razorpay order server-side so UPI QR is valid
+      const orderRes = await fetch(`${BACKEND}/api/v1/razorpay/create-order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amount: plan.price }),
+      });
+      const orderData = await orderRes.json();
+      if (!orderRes.ok || !orderData.order_id) {
+        setFailModal({ visible: true, planName: plan.name });
+        return;
+      }
+
       const options = {
         description: plan.name,
         image: 'https://vahanping.com/logo.png',
         currency: 'INR',
         key: RAZORPAY_KEY,
-        amount: plan.price * 100,
+        amount: orderData.amount,
+        order_id: orderData.order_id,
         name: 'VahanPing',
         prefill: { email: '', contact: deliveryAddress?.phone || '', name: deliveryAddress?.name || '' },
         theme: { color: '#7C3AED' },
       };
       const data = await RazorpayCheckout.open(options);
+
+      // Only treat as success when Razorpay explicitly confirms payment
+      if (!data?.razorpay_payment_id) return;
+
       if (deliveryAddress) {
         try {
           await fetch(`${BACKEND}/api/v1/orders`, {
